@@ -1,0 +1,82 @@
+version: "3.8"
+
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-posture_system}
+      MYSQL_USER: ${MYSQL_USER:-posture}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-posture123}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123}
+    volumes:
+      - posture_mysql_data:/var/lib/mysql
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    networks:
+      - posture-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root123}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    networks:
+      - posture-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  python-api:
+    build:
+      context: ./skating-deep-cnn-lstm-bayes
+    restart: unless-stopped
+    ports:
+      - "${PYTHON_API_PORT:-5001}:5001"
+    networks:
+      - posture-net
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5001/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  springboot:
+    build:
+      context: ./backend-springboot
+    restart: unless-stopped
+    ports:
+      - "${SPRINGBOOT_PORT:-5000}:5000"
+    networks:
+      - posture-net
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      python-api:
+        condition: service_healthy
+    environment:
+      DB_USERNAME: ${MYSQL_USER:-posture}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-posture123}
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-posture_system}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&createDatabaseIfNotExist=true
+      APP_MODEL_API_BASE_URL: http://python-api:5001
+
+networks:
+  posture-net:
+    driver: bridge
+
+volumes:
+  posture_mysql_data:
+    driver: local

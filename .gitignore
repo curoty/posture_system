@@ -1,0 +1,15 @@
+.env
+.venv/
+venv/
+*.pt
+*.pth
+*.mp4
+*.avi
+*.mov
+*.json
+*.jsonl
+datasets/
+data/
+.idea/
+target/
+node_modules/

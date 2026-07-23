@@ -1,0 +1,246 @@
+<view class="page">
+  <view class="card" wx:if="{{accessDenied}}">
+    <view class="title">无法访问</view>
+    <view class="desc">请先登录后再使用传感器调试。</view>
+  </view>
+
+  <block wx:else>
+    <view class="card intro-card">
+      <view class="section-top">
+        <view class="title">传感器模型 MVP 调试</view>
+        <text wx:if="{{bigScreenEnabled}}" class="text-btn mode-btn" bindtap="onToggleBigScreenMode">大屏展示</text>
+      </view>
+      <view class="desc">支持动作选择、WiFi 设备检测、采集、AI 分析与样本保存。</view>
+    </view>
+
+    <view class="card status-card">
+      <view class="status-row">
+        <view class="status-tag {{lastAnalyzeResult ? 'ok' : 'idle'}}">分析{{lastAnalyzeResult ? '已完成' : '未执行'}}</view>
+        <view class="status-tag {{lastSaveResult ? 'ok' : 'idle'}}" wx:if="{{canSaveTrainingSample}}">样本{{lastSaveResult ? '已保存' : '未保存'}}</view>
+        <view class="status-tag info">帧数 {{lastFrameSize}}</view>
+      </view>
+      <view class="status-meta">最近分析：{{lastAnalyzeAtText}}</view>
+      <view class="status-meta" wx:if="{{canSaveTrainingSample}}">最近保存：{{lastSaveAtText}}</view>
+    </view>
+
+    <view class="card quick-result-card" wx:if="{{latestAnalyzeScore > 0 || analysisDiagnosisText}}">
+      <view class="subtitle no-margin">分析结果</view>
+      <view class="quick-result-row">
+        <view class="quick-result-item">
+          <text class="quick-result-label">分数</text>
+          <text class="quick-result-value">{{latestAnalyzeScore}}</text>
+        </view>
+        <view class="quick-result-item">
+          <text class="quick-result-label">等级</text>
+          <text class="quick-result-value">{{latestAnalyzeLevel}}</text>
+        </view>
+      </view>
+      <view class="hint" wx:if="{{weightShiftTip}}">
+        <text class="play-voice-btn" bindtap="onTapPlayVoice">{{voicePlaying ? '暂停' : '播报'}}</text>
+        {{weightShiftTip}}
+      </view>
+    </view>
+
+    <view class="card" wx:if="{{bigScreenEnabled && analyzeFlowVisible}}">
+      <view class="section-top">
+        <view class="subtitle no-margin">实时分析看板</view>
+        <text>{{analyzeFlowProgress}}%</text>
+      </view>
+      <view class="hint">{{analyzeFlowStatusText}}</view>
+      <view class="status-meta">耗时 {{analyzeFlowElapsedSec}}s</view>
+      <view class="status-meta">目标帧数 {{frameCount}}，采样间隔 {{sampleIntervalMs}}ms</view>
+    </view>
+
+    <view class="card" wx:if="{{bigScreenEnabled && resultShowcaseVisible}}">
+      <view class="section-top">
+        <view class="subtitle no-margin">模型评分结果</view>
+        <text>{{resultShowcaseModelScore}}</text>
+      </view>
+      <view class="hint">动作：{{resultShowcaseActionLabel}}</view>
+      <view class="hint">等级：{{resultShowcaseQualityTag || '-'}}</view>
+      <view class="status-meta">inferenceMode: {{resultShowcaseInferenceMode || '-'}}</view>
+      <view class="status-meta">modelVersion: {{resultShowcaseModelVersion || '-'}}</view>
+      <view class="error" wx:if="{{resultShowcaseApiError}}">{{resultShowcaseApiError}}</view>
+    </view>
+
+    <view class="card">
+      <view class="field">
+        <text class="label">会话编号</text>
+        <view class="preset-row">
+          <view class="preset-chip {{sessionIdIndex == index ? 'active' : ''}}" wx:for="{{sessionIdOptions}}" wx:key="index" data-index="{{index}}" bindtap="onTapSessionId">{{item.label}}</view>
+        </view>
+      </view>
+
+      <view class="field">
+        <text class="label">动作类型</text>
+        <picker mode="selector" range="{{actionTypeOptions}}" range-key="label" value="{{actionTypeIndex}}" bindchange="onChangeActionType">
+          <view class="picker-value">{{actionTypeOptions[actionTypeIndex].label}}</view>
+        </picker>
+      </view>
+
+      <view class="field">
+        <text class="label">数据来源</text>
+        <picker mode="selector" range="{{sourceTypeOptions}}" range-key="label" value="{{sourceTypeIndex}}" bindchange="onChangeSourceType">
+          <view class="picker-value">{{currentSourceTypeLabel}}</view>
+        </picker>
+      </view>
+
+      <view class="field">
+        <view class="label-row">
+          <text class="label">节点选择（多选）</text>
+          <view class="section-actions">
+            <text class="text-btn" bindtap="onTapSelectAllSensorRoles">全选</text>
+            <text class="text-btn" bindtap="onTapResetSensorRoles">默认</text>
+          </view>
+        </view>
+        <checkbox-group class="sensor-role-group" bindchange="onChangeSensorRoles">
+          <label class="sensor-role-item" wx:for="{{sensorRoleOptions}}" wx:key="value">
+            <checkbox value="{{item.value}}" checked="{{item.checked}}" color="#2563eb" />
+            <text class="sensor-role-label">{{item.label}}</text>
+          </label>
+        </checkbox-group>
+        <view class="hint">当前已选：{{selectedSensorRoles.length}} 个节点，{{selectedSensorRoles.join('、')}}</view>
+      </view>
+
+      <view class="field ble-block" wx:if="{{showWiFiSection}}">
+        <view class="ble-header">
+          <text class="ble-title">WiFi 设备状态</text>
+          <view class="device-status-tag {{deviceConnected ? 'ok' : (deviceStatusText === '离线' ? 'fail' : 'idle')}}">
+            <text class="device-status-dot {{deviceConnected ? 'dot-ok' : (deviceStatusText === '离线' ? 'dot-fail' : 'dot-idle')}}"></text>
+            {{deviceStatusText}}
+          </view>
+        </view>
+        <view class="ble-meta" wx:if="{{deviceEndpoint}}">连接地址：{{deviceEndpoint}}</view>
+        <view class="ble-meta" wx:if="{{deviceStatusDetail}}">{{deviceStatusDetail}}</view>
+        <button class="btn ble-btn" loading="{{bleTesting}}" bindtap="onTapBleConnectTestPureWifi">{{bleTesting ? '检测中...' : '重新检测 WiFi 设备'}}</button>
+        <view class="hint">请让手机和设备接入同一 WiFi（{{deviceEndpoint || '检测后显示地址'}}）。</view>
+      </view>
+
+      <view class="field" wx:if="{{showWiFiSection}}">
+        <text class="label">陀螺仪主动零偏校准</text>
+        <button class="btn ble-btn" loading="{{calibrationRunning}}" disabled="{{calibrationRunning || collecting}}" bindtap="onTapCalibrateSelectedNodes">
+          {{calibrationRunning ? '校准准备中...' : '校准已选节点'}}
+        </button>
+        <view class="hint">{{calibrationStatusText}}</view>
+        <view class="hint">校准时请固定已选节点；校准完成后再开始训练数据采集。</view>
+      </view>
+
+      <view class="field">
+        <text class="label">测试用户 ID（自动）</text>
+        <input class="input" value="{{userId}}" disabled="true" />
+      </view>
+
+      <view class="field">
+        <text class="label">采样帧数（30~180）</text>
+        <input class="input" type="number" value="{{frameCount}}" data-field="frameCount" bindinput="onChangeField" />
+        <view class="preset-row">
+          <text class="preset-label">快捷：</text>
+          <view class="preset-chip {{frameCount == item ? 'active' : ''}}" wx:for="{{framePresetOptions}}" wx:key="*this" data-value="{{item}}" bindtap="onTapFramePreset">{{item}}</view>
+        </view>
+      </view>
+
+      <view class="field">
+        <text class="label">采样间隔（20~200ms）</text>
+        <input class="input" type="number" value="{{sampleIntervalMs}}" data-field="sampleIntervalMs" bindinput="onChangeField" />
+        <view class="preset-row">
+          <text class="preset-label">快捷：</text>
+          <view class="preset-chip {{sampleIntervalMs == item ? 'active' : ''}}" wx:for="{{sampleIntervalPresetOptions}}" wx:key="*this" data-value="{{item}}" bindtap="onTapSampleIntervalPreset">{{item}}ms</view>
+        </view>
+        <view class="hint">默认 50ms，若动作较长可调到 70ms。</view>
+      </view>
+
+      <view class="field">
+        <text class="label">备注</text>
+        <textarea class="textarea" value="{{note}}" data-field="note" bindinput="onChangeField" />
+      </view>
+
+      <view class="actions">
+        <button class="btn primary" loading="{{collecting}}" bindtap="onTapCollectData">分析动作</button>
+        <button class="btn secondary" loading="{{saving}}" bindtap="onTapSaveCollectedData" disabled="{{!hasCollectedData}}">保存数据</button>
+      </view>
+      <button class="btn remote-btn" loading="{{analyzing}}" bindtap="onTapRemotePredict" disabled="{{!hasCollectedData}}" wx:if="{{hasCollectedData}}">远程 AI 评分</button>
+      <view class="hint" wx:if="{{hasCollectedData}}">先采集数据，再点击“远程 AI 评分”提交到服务器。</view>
+      <navigator class="list-link" wx:if="{{canSaveTrainingSample}}" url="/pages/coach/sensor/samples/list/list">查看样本列表</navigator>
+      <navigator class="list-link" url="/pages/coach/sensor/static-capture/static-capture">腰部静止温漂采集</navigator>
+      <navigator class="list-link" url="/pages/coach/sensor/static-capture-four-nodes/static-capture-four-nodes">四节点静止采集</navigator>
+      <view class="hint" wx:if="{{canSaveTrainingSample}}">分析结果会自动回填评分、标签和评语。</view>
+      <view class="hint" wx:else>当前账号仅支持连接与分析，不可保存训练样本。</view>
+    </view>
+
+    <view class="card" wx:if="{{canSaveTrainingSample}}">
+      <view class="section-top">
+        <view class="subtitle no-margin">样本标注参数</view>
+        <view class="section-actions">
+          <text class="text-btn" bindtap="onTapFillLabelTemplate">刷新分析结果</text>
+          <text class="text-btn" bindtap="toggleLabelSection">{{labelSectionCollapsed ? '展开' : '收起'}}</text>
+        </view>
+      </view>
+      <block wx:if="{{!labelSectionCollapsed}}">
+        <view class="field">
+          <text class="label">教练评分（0~100）</text>
+          <input class="input" type="number" value="{{coachScore}}" disabled="true" />
+        </view>
+        <view class="field">
+          <text class="label">质量标签</text>
+          <view class="preset-row">
+            <view class="preset-chip {{qualityTagIndex == index ? 'active' : ''}}" wx:for="{{qualityTagOptions}}" wx:key="index" data-index="{{index}}">{{item.label}}</view>
+          </view>
+        </view>
+        <view class="field">
+          <text class="label">标签</text>
+          <input class="input" value="{{tagsText}}" disabled="true" />
+        </view>
+        <view class="field">
+          <text class="label">教练评语</text>
+          <textarea class="textarea" value="{{coachComment}}" disabled="true" />
+        </view>
+        <view class="field">
+          <text class="label">建议选项（可多选）</text>
+          <view class="preset-row">
+            <view class="preset-chip {{suggestion1?'active':''}}" data-num="1" bindtap="onTapSuggestionNum">1</view>
+            <view class="preset-chip {{suggestion2?'active':''}}" data-num="2" bindtap="onTapSuggestionNum">2</view>
+            <view class="preset-chip {{suggestion3?'active':''}}" data-num="3" bindtap="onTapSuggestionNum">3</view>
+            <view class="preset-chip {{suggestion4?'active':''}}" data-num="4" bindtap="onTapSuggestionNum">4</view>
+            <view class="preset-chip {{suggestion5?'active':''}}" data-num="5" bindtap="onTapSuggestionNum">5</view>
+            <view class="preset-chip {{suggestion6?'active':''}}" data-num="6" bindtap="onTapSuggestionNum">6</view>
+            <view class="preset-chip {{suggestion7?'active':''}}" data-num="7" bindtap="onTapSuggestionNum">7</view>
+            <view class="preset-chip {{suggestion8?'active':''}}" data-num="8" bindtap="onTapSuggestionNum">8</view>
+          </view>
+        </view>
+      </block>
+    </view>
+
+    <view class="card" wx:if="{{errorTip}}">
+      <view class="error">{{errorTip}}</view>
+      <view class="ble-debug-text" wx:if="{{bleDebugSummary}}" bindtap="onToggleBleDebug">
+        <text wx:if="{{!bleDebugExpanded}}">点击查看 WiFi 设备调试详情</text>
+        <text wx:else>{{bleDebugSummary}}</text>
+      </view>
+      <view class="tip" wx:if="{{showCollectionHint}}">如果提示集合不存在，请先在云开发数据库创建 `skate_sensor_training_samples`。</view>
+    </view>
+
+    <view class="card result-detail-card" wx:if="{{latestAnalyzeScore > 0 || analysisDiagnosisText}}">
+      <view class="section-top">
+        <view class="subtitle no-margin">AI 分析详情</view>
+      </view>
+
+      <view class="result-summary-row">
+        <view class="result-summary-item">
+          <text class="result-summary-label">综合评分</text>
+          <text class="result-summary-value">{{latestAnalyzeScore}}</text>
+        </view>
+        <view class="result-summary-item">
+          <text class="result-summary-label">等级</text>
+          <text class="result-summary-value">{{latestAnalyzeLevel}}</text>
+        </view>
+        <view class="result-summary-item">
+          <text class="result-summary-label">置信度</text>
+          <text class="result-summary-value">{{analysisConfidence}}%</text>
+        </view>
+      </view>
+
+      <view class="result-summary-text" wx:if="{{analysisSummary}}">{{analysisSummary}}</view>
+      <view class="result-summary-text" wx:if="{{analysisDiagnosisText}}">诊断：{{analysisDiagnosisText}}</view>
+    </view>
+  </block>
+</view>

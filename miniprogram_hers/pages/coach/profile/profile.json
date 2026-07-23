@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "我的",
+  "disableScroll": true,
+  "usingComponents": {
+    "coach-tab-bar": "/components/coach-tab-bar/index"
+  }
+}

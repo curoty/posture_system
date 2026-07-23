@@ -1,0 +1,138 @@
+{
+  "miniprogramRoot": "miniprogram_hers/",
+  "cloudfunctionRoot": "cloudfunctions/",
+  "setting": {
+    "urlCheck": true,
+    "es6": true,
+    "enhance": true,
+    "postcss": true,
+    "preloadBackgroundData": false,
+    "minified": true,
+    "newFeature": true,
+    "coverView": true,
+    "nodeModules": false,
+    "autoAudits": false,
+    "showShadowRootInWxmlPanel": true,
+    "scopeDataCheck": false,
+    "uglifyFileName": false,
+    "checkInvalidKey": false,
+    "checkSiteMap": false,
+    "uploadWithSourceMap": false,
+    "compileHotReLoad": false,
+    "useMultiFrameRuntime": false,
+    "useApiHook": false,
+    "useApiHostProcess": false,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    },
+    "enableEngineNative": false,
+    "useIsolateContext": false,
+    "useCompilerModule": false,
+    "userConfirmedUseCompilerModuleSwitch": false,
+    "userConfirmedBundleSwitch": false,
+    "packNpmManually": false,
+    "packNpmRelationList": [],
+    "minifyWXSS": true,
+    "compileWorklet": false,
+    "minifyWXML": true,
+    "localPlugins": false,
+    "disableUseStrict": false,
+    "useCompilerPlugins": false,
+    "condition": false,
+    "swc": false,
+    "disableSWC": true
+  },
+  "appid": "wxc0574dabc9efaf0f",
+  "projectname": "quickstart-wx-cloud",
+  "libVersion": "2.32.3",
+  "cloudfunctionTemplateRoot": "cloudfunctionTemplate/",
+  "condition": {
+    "search": {
+      "list": []
+    },
+    "conversation": {
+      "list": []
+    },
+    "plugin": {
+      "list": []
+    },
+    "game": {
+      "list": []
+    },
+    "miniprogram": {
+      "list": [
+        {
+          "id": -1,
+          "name": "login",
+          "pathName": "pages/login/login"
+        }
+      ]
+    }
+  },
+  "compileType": "miniprogram",
+  "srcMiniprogramRoot": "miniprogram_hers/",
+  "packOptions": {
+    "ignore": [
+      {
+        "value": "miniprogram_hers/pages/example",
+        "type": "folder"
+      },
+      {
+        "value": "miniprogram_hers/pages/index",
+        "type": "folder"
+      },
+      {
+        "value": "miniprogram_hers/images/ai_example1.png",
+        "type": "file"
+      },
+      {
+        "value": "miniprogram_hers/images/ai_example2.png",
+        "type": "file"
+      },
+      {
+        "value": "miniprogram_hers/images/cloud_dev.png",
+        "type": "file"
+      },
+      {
+        "value": "miniprogram_hers/images/create_cbr.png",
+        "type": "file"
+      },
+      {
+        "value": "miniprogram_hers/images/create_cbrf.png",
+        "type": "file"
+      },
+      {
+        "value": "miniprogram_hers/images/create_env.png",
+        "type": "file"
+      },
+      {
+        "value": "miniprogram_hers/images/database.png",
+        "type": "file"
+      },
+      {
+        "value": "miniprogram_hers/images/database_add.png",
+        "type": "file"
+      },
+      {
+        "value": "miniprogram_hers/images/env-select.png",
+        "type": "file"
+      },
+      {
+        "value": "miniprogram_hers/images/function_deploy.png",
+        "type": "file"
+      },
+      {
+        "value": "miniprogram_hers/images/scf-enter.png",
+        "type": "file"
+      }
+    ],
+    "include": []
+  },
+  "editorSetting": {
+    "tabIndent": "insertSpaces",
+    "tabSize": 2
+  },
+  "simulatorPluginLibVersion": {}
+}

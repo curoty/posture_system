@@ -1,0 +1,49 @@
+<scroll-view class="page-scroll" scroll-y="true" enhanced="true" show-scrollbar="false">
+  <view class="container">
+    <view class="search-row">
+      <view class="search-box">
+        <text class="search-icon">🔍</text>
+        <input class="search-input" placeholder="搜索违禁词" placeholder-class="search-placeholder" bindinput="bindSearchInput" />
+      </view>
+      <view class="refresh-btn" bindtap="refreshList">↻</view>
+    </view>
+
+    <view class="category-tabs">
+      <view wx:for="{{categoryOptions}}" wx:key="*this" class="category-tab {{activeCategory === item ? 'active' : ''}}" bindtap="bindCategoryTap" data-category="{{item}}">
+        {{item}}
+      </view>
+    </view>
+
+    <view class="add-section">
+      <view class="add-input-wrap">
+        <input class="add-input" placeholder="输入新违禁词" bindinput="bindNewWordInput" maxlength="20" />
+        <picker mode="selector" range="{{categoryOptions}}" value="{{newWordCategoryIndex}}" bindchange="bindNewWordCategoryChange" class="add-picker">
+          <view class="add-picker-inner">{{categoryOptions[newWordCategoryIndex]}}</view>
+        </picker>
+      </view>
+      <button class="add-btn" bindtap="addWord">+ 添加</button>
+    </view>
+
+    <view class="word-list">
+      <view wx:for="{{filteredWords}}" wx:key="_id" class="word-item">
+        <view class="word-info">
+          <text class="word-text">{{item.word}}</text>
+          <text class="word-category">{{item.category}}</text>
+        </view>
+        <view class="word-actions">
+          <view class="action-btn toggle" bindtap="toggleWord" data-word="{{item.word}}" data-enabled="{{item.enabled}}">
+            {{item.enabled ? '禁用' : '启用'}}
+          </view>
+          <view class="action-btn delete" bindtap="confirmDeleteWord" data-word="{{item.word}}">删除</view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{!loading && filteredWords.length === 0}}" class="empty-state">
+      <text class="empty-text">暂无违禁词</text>
+      <text class="empty-tip">点击上方添加按钮添加</text>
+    </view>
+
+    <view wx:if="{{loading}}" class="loading-tip">加载中...</view>
+  </view>
+</scroll-view>

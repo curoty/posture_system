@@ -1,0 +1,53 @@
+<view class="container">
+  <scroll-view class="page-scroll" scroll-y="true" enhanced="true" show-scrollbar="false">
+    <view wx:if="{{loading}}" class="loading-state">加载中...</view>
+    <view wx:elif="{{loadError}}" class="error-state">
+      <text class="error-text">{{loadError}}</text>
+      <button class="retry-btn" bindtap="loadDetail">重新加载</button>
+    </view>
+    <view wx:elif="{{activity}}" class="detail-content">
+      <swiper class="image-swiper" indicator-dots="true" circular="true" indicator-color="rgba(255,255,255,0.5)" indicator-active-color="#fff">
+        <swiper-item wx:for="{{imageUrls}}" wx:key="*this">
+          <image class="swiper-img" src="{{item}}" mode="aspectFill" />
+        </swiper-item>
+      </swiper>
+
+      <view class="info-card">
+        <view class="price-row">
+          <text class="price-symbol">¥</text>
+          <text class="price-value">{{activity.priceText}}</text>
+          <view class="status-badge {{activity.statusKey === 'active' ? 'active' : 'ended'}}">
+            {{activity.statusText}}
+          </view>
+        </view>
+        <text class="title">{{activity.title}}</text>
+        <view class="meta-row">
+          <text class="meta-item">{{activity.categoryLabel}}</text>
+          <text class="meta-item">{{activity.capacityText}}</text>
+        </view>
+      </view>
+
+      <view class="desc-card">
+        <view class="card-title">商品描述</view>
+        <text class="desc-content">{{activity.description || '暂无描述'}}</text>
+      </view>
+
+      <view class="time-card">
+        <view class="card-title">上架时间</view>
+        <view class="time-item">
+          <text class="time-label">开始时间</text>
+          <text class="time-value">{{activity.startAt || '未设置'}}</text>
+        </view>
+        <view class="time-item">
+          <text class="time-label">结束时间</text>
+          <text class="time-value">{{activity.endAt || '未设置'}}</text>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <view wx:if="{{activity && isSeller}}" class="action-bar">
+    <button class="action-btn edit-btn" bindtap="goEdit">编辑商品</button>
+    <button class="action-btn delete-btn" bindtap="confirmDelete">删除商品</button>
+  </view>
+</view>

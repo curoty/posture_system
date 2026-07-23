@@ -1,0 +1,88 @@
+<view class="container">
+  <view class="form-card">
+    <view wx:if="{{isVideoMode}}" class="mode-tip">视频发布模式：填写标题和描述后发布到视频模块</view>
+
+    <view class="form-item">
+      <text class="label">{{isVideoMode ? '视频标题' : '标题'}}</text>
+      <input
+        class="input"
+        placeholder="{{isVideoMode ? '请输入视频标题' : '请输入帖子标题'}}"
+        maxlength="50"
+        value="{{title}}"
+        bindinput="bindTitleInput"
+      />
+    </view>
+
+    <view wx:if="{{!isVideoMode}}" class="form-item">
+      <text class="label">标签</text>
+      <input
+        class="input"
+        placeholder="例如：训练心得 / 求助交流"
+        maxlength="20"
+        value="{{tag}}"
+        bindinput="bindTagInput"
+      />
+    </view>
+
+    <view class="form-item">
+      <text class="label">{{isVideoMode ? '视频描述' : '内容'}}</text>
+      <textarea
+        class="textarea"
+        placeholder="{{isVideoMode ? '请输入视频描述（选填）' : '可输入文字，也可直接发照片/视频'}}"
+        maxlength="1000"
+        value="{{content}}"
+        bindinput="bindContentInput"
+      />
+      <text class="count">{{contentLength}}/1000</text>
+    </view>
+
+    <view class="form-item media-item">
+      <text class="label">{{isVideoMode ? '视频' : '媒体'}}</text>
+      <view wx:if="{{!video}}" class="media-actions">
+        <button wx:if="{{!isVideoMode}}" class="media-btn" bindtap="chooseImages">添加照片</button>
+        <button class="media-btn" bindtap="chooseVideo">添加视频</button>
+      </view>
+
+      <view wx:if="{{!isVideoMode && images.length > 0}}" class="image-grid">
+        <view wx:for="{{images}}" wx:key="*this" class="image-item">
+          <image
+            class="image-preview"
+            src="{{item}}"
+            mode="aspectFill"
+            data-index="{{index}}"
+            bindtap="previewSelectedImage"
+            binderror="handleSelectedImageError"
+          />
+          <view class="remove-icon" data-index="{{index}}" bindtap="removeImage">x</view>
+        </view>
+      </view>
+
+      <view wx:if="{{video}}" class="video-wrap">
+        <view wx:if="{{video.sourceType === 'message-file'}}" class="video-file-fallback">
+          <text class="video-file-title">已选择本地视频</text>
+          <text class="video-file-name">{{video.fileName || '本地文件'}}</text>
+          <text class="video-file-tip">开发者工具内联预览兼容性差，请点“系统预览”查看</text>
+        </view>
+        <view wx:else class="video-preview-container">
+          <video
+            class="video-preview"
+            src="{{video.tempFilePath}}"
+            poster="{{video.poster || ''}}"
+            controls
+            objectFit="contain"
+            binderror="handlePreviewVideoError"
+          ></video>
+        </view>
+        <view class="video-preview-actions">
+          <button class="change-video-btn" bindtap="chooseVideo">更换视频</button>
+          <button class="preview-video-btn" bindtap="previewVideoBySystem">系统预览</button>
+          <button class="remove-video-btn" bindtap="removeVideo">删除视频</button>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <button class="submit-btn" bindtap="submitPost" loading="{{submitting}}" disabled="{{submitting}}">
+    {{submitting ? '发布中...' : (isVideoMode ? '发布视频' : '立即发布')}}
+  </button>
+</view>

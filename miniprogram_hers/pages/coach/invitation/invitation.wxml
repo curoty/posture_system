@@ -1,0 +1,51 @@
+<view class="page">
+  <canvas canvas-id="qrCodeCanvas" class="qr-canvas" style="width: 300px; height: 300px;"></canvas>
+  <view class="container">
+    <view class="header">
+      <text class="header-title">班级邀请</text>
+      <text class="header-desc">分享班级码或二维码邀请学员加入</text>
+    </view>
+
+    <view wx:if="{{loading}}" class="loading-block">
+      <text class="loading-text">加载中...</text>
+    </view>
+
+    <view wx:elif="{{hasInvitation}}" class="invitation-content">
+      <view class="qr-section">
+        <view class="qr-wrapper">
+          <image wx:if="{{qrCodeTempUrl}}" class="qr-image" src="{{qrCodeTempUrl}}" mode="widthFix" />
+          <view wx:else class="qr-loading">
+            <text class="qr-loading-icon">⏳</text>
+            <text class="qr-loading-text">生成中...</text>
+          </view>
+        </view>
+        <text class="qr-tip">点击可放大查看</text>
+      </view>
+
+      <view class="code-section">
+        <text class="code-label">班级数字码</text>
+        <view class="code-display" bindtap="onCopyCode">
+          <text class="code-text">{{classCode}}</text>
+          <text class="copy-btn">{{codeCopied ? '已复制' : '复制'}}</text>
+        </view>
+        <text class="code-tip">学员可在首页「加入班级」中输入此码加入</text>
+      </view>
+
+      <view class="stats-row">
+        <text class="stats-text">已通过此码加入：{{studentCount}} 人</text>
+      </view>
+
+      <view class="action-row">
+        <button class="action-btn regenerate-btn" bindtap="onGenerateCode">重新生成</button>
+        <button class="action-btn share-btn" open-type="share">分享给好友</button>
+      </view>
+    </view>
+
+    <view wx:else class="empty-block">
+      <view class="empty-icon">🎓</view>
+      <text class="empty-title">还没有班级邀请码</text>
+      <text class="empty-desc">生成专属班级码，让学员快速加入你的班级</text>
+      <button class="generate-btn" bindtap="onGenerateCode">立即生成</button>
+    </view>
+  </view>
+</view>

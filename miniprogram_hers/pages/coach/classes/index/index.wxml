@@ -1,0 +1,56 @@
+<view class="page">
+  <view class="header">
+    <view class="header-left" bindtap="goBack">
+      <text class="back-icon">←</text>
+    </view>
+    <text class="header-title">{{isAdmin ? '全部班级' : '我的班级'}}</text>
+    <view class="header-right" bindtap="goCreate">
+      <text class="create-btn">+ 创建班级</text>
+    </view>
+  </view>
+
+  <scroll-view class="page-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+    <view wx:if="{{loading}}" class="loading-state">加载中...</view>
+
+    <view wx:elif="{{loadError}}" class="error-state">
+      <text class="error-text">{{loadError}}</text>
+      <button class="retry-btn" bindtap="loadClasses">点击重试</button>
+    </view>
+
+    <view wx:elif="{{classes.length === 0}}" class="empty-state">
+      <text class="empty-icon">📋</text>
+      <text class="empty-text">还没有班级</text>
+      <button class="create-btn-full" bindtap="goCreate">创建第一个班级</button>
+    </view>
+
+    <view wx:else class="class-list">
+      <view
+        wx:for="{{classes}}"
+        wx:key="_id"
+        class="class-card {{!item.isOwn ? 'other-class' : ''}}"
+        bindtap="goDetail"
+        data-id="{{item._id}}"
+      >
+        <view class="card-top">
+          <view class="class-name-row">
+            <text class="class-name">{{item.className}}</text>
+            <text wx:if="{{!item.isOwn}}" class="other-tag">其他教练</text>
+          </view>
+          <text class="student-count">{{item.studentCount}}人</text>
+        </view>
+        <text wx:if="{{item.description}}" class="class-desc">{{item.description}}</text>
+        <view class="card-meta">
+          <text wx:if="{{item.scheduleTime}}" class="meta-item">📅 {{item.scheduleTime}}</text>
+          <text wx:if="{{item.coachName && !item.isOwn}}" class="meta-item coach-meta">👤 {{item.coachName}}</text>
+          <text class="meta-item">🕐 {{item.createdAt}}</text>
+        </view>
+        <view class="card-actions" wx:if="{{item.isOwn}}">
+          <view class="action-btn action-edit" catchtap="goEdit" data-id="{{item._id}}">编辑</view>
+          <view class="action-btn action-delete" catchtap="confirmDelete" data-id="{{item._id}}" data-name="{{item.className}}">删除</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="safe-bottom"></view>
+  </scroll-view>
+</view>

@@ -1,0 +1,62 @@
+<view class="page">
+  <view class="header-bar">
+    <text class="header-title">用户管理</text>
+    <text class="header-subtitle">共 {{total}} 位用户</text>
+  </view>
+
+  <view wx:if="{{loading && userList.length === 0}}" class="state-card">
+    <text class="state-text">正在加载用户列表...</text>
+  </view>
+
+  <view wx:elif="{{loadError && userList.length === 0}}" class="state-card error-card">
+    <text class="state-text error-text">{{loadError}}</text>
+    <button class="retry-btn" bindtap="loadUserList">重新加载</button>
+  </view>
+
+  <view wx:elif="{{userList.length === 0}}" class="state-card">
+    <text class="state-text">暂无注册用户</text>
+  </view>
+
+  <view wx:else class="list-container">
+    <view class="list-header">
+      <text class="col-name">姓名</text>
+      <text class="col-phone">手机号</text>
+      <text class="col-role">角色</text>
+      <text class="col-action">操作</text>
+    </view>
+
+    <view wx:for="{{userList}}" wx:key="id" class="user-card">
+      <view class="user-info">
+        <view class="user-avatar">
+          <image wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill" />
+          <text wx:else class="avatar-placeholder">{{item.name[0] || '?'}}</text>
+        </view>
+        <view class="user-meta">
+          <text class="user-name">{{item.name}}</text>
+          <text class="user-phone">{{item.phone}}</text>
+          <text class="user-date">注册：{{item.createdAt}}</text>
+        </view>
+      </view>
+      <view class="user-tags">
+        <text class="role-badge role-{{item.role}}">{{item.roleLabel}}</text>
+      </view>
+      <button
+        class="action-btn {{item.role === 'coach' ? 'action-demote' : 'action-promote'}}"
+        data-id="{{item.id}}"
+        bindtap="onChangeRole"
+        loading="{{updatingUserId === item.id}}"
+        disabled="{{updatingUserId === item.id}}"
+      >
+        {{item.role === 'coach' ? '设为学员' : '设为教练'}}
+      </button>
+    </view>
+
+    <view wx:if="{{loading && userList.length > 0}}" class="loading-more">
+      <text class="state-text">加载更多...</text>
+    </view>
+
+    <view wx:elif="{{!hasMore && userList.length > 0}}" class="loading-more">
+      <text class="state-text">已加载全部用户</text>
+    </view>
+  </view>
+</view>

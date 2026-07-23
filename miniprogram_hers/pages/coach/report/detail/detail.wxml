@@ -1,0 +1,34 @@
+<view class="container">
+  <view wx:if="{{loading}}" class="state-tip">加载中...</view>
+  <view wx:if="{{loadError}}" class="state-tip error">{{loadError}}</view>
+
+  <view wx:if="{{!loading && report}}" class="report-card">
+    <text class="report-title">{{report.title}}</text>
+    <view class="meta-row">
+      <text class="meta-item">发布时间：{{report.createdAtText}}</text>
+      <text class="meta-item">覆盖学生：{{report.studentCount}} 人</text>
+    </view>
+    <view class="coach-line">
+      <text class="coach-label">发布人：</text>
+      <text class="coach-name">{{report.coachName}}</text>
+    </view>
+
+    <view class="flower-summary">
+      <text class="flower-summary-label">本次共颁发</text>
+      <text class="flower-summary-value">🌸{{report.totalFlowerCount}}</text>
+    </view>
+
+    <view class="flower-list" wx:if="{{report.studentFlowerList.length > 0}}">
+      <text class="flower-list-title">学员小红花明细</text>
+      <view wx:for="{{report.studentFlowerList}}" wx:key="studentId" class="flower-item">
+        <text class="flower-student">{{item.studentName}}</text>
+        <text class="flower-count">🌸{{item.flowerCount}}</text>
+      </view>
+    </view>
+
+    <view class="content-box">
+      <text class="content-title">总反馈内容</text>
+      <text class="content-text">{{report.content}}</text>
+    </view>
+  </view>
+</view>

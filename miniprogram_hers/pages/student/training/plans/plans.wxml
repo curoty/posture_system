@@ -1,0 +1,22 @@
+<view class="container">
+  <view wx:if="{{loading}}" class="tip loading">加载中...</view>
+  <view wx:if="{{loadError}}" class="tip error">{{loadError}}</view>
+
+  <view wx:if="{{!loading && plans.length > 0}}" class="plan-list">
+    <view wx:for="{{plans}}" wx:key="id" class="plan-item">
+      <view class="plan-header">
+        <text class="plan-title">{{item.title}}</text>
+        <text class="plan-status status-{{item.statusClass}}">{{item.statusText}}</text>
+      </view>
+      <text class="plan-meta">{{item.date}} · {{item.durationText}} · {{item.intensityText}}</text>
+      <text class="plan-coach">教练：{{item.coachName}}</text>
+      <text wx:if="{{item.content}}" class="plan-desc">训练内容：{{item.content}}</text>
+    </view>
+  </view>
+
+  <view wx:if="{{!loading && plans.length === 0}}" class="empty">
+    <text class="empty-icon">📅</text>
+    <text class="empty-text">暂无训练任务</text>
+    <text class="empty-tip">教练发布任务后会显示在这里</text>
+  </view>
+</view>

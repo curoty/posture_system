@@ -1,0 +1,59 @@
+<view class="page">
+  <view class="card" wx:if="{{accessDenied}}">
+    <view class="title">无权限</view>
+    <view class="tip">仅管理员或教练可查看样本列表。</view>
+  </view>
+
+  <block wx:else>
+    <view class="card filters">
+      <view class="filter-item">
+        <text class="label">来源筛选</text>
+        <picker mode="selector" range="{{sourceOptions}}" range-key="label" value="{{sourceIndex}}" bindchange="onChangeSource">
+          <view class="picker-value">{{sourceOptions[sourceIndex].label}}</view>
+        </picker>
+      </view>
+      <button class="refresh-btn" bindtap="onTapRefresh" loading="{{loading}}">刷新</button>
+    </view>
+
+    <view class="card" wx:if="{{errorTip}}">
+      <text class="error">{{errorTip}}</text>
+    </view>
+
+    <view class="card" wx:if="{{loading}}">
+      <text class="state">加载中...</text>
+    </view>
+
+    <view class="card" wx:elif="{{samples.length === 0}}">
+      <text class="state">暂无样本数据</text>
+    </view>
+
+    <view wx:else class="list">
+      <view wx:for="{{samples}}" wx:key="id" class="card item-card">
+        <view class="item-head">
+          <text class="session">{{item.sessionId}}</text>
+          <text class="source">{{item.sourceLabel}}</text>
+        </view>
+
+        <view class="meta">学员ID：{{item.userId}}</view>
+        <view class="meta">动作：{{item.actionLabel}}</view>
+        <view class="meta">评分：{{item.coachScore}} | 标签：{{item.qualityTag}}</view>
+        <view class="meta">帧数：{{item.frameCount}} | 创建：{{item.createdAtText}}</view>
+
+        <view class="item-actions">
+          <button size="mini" class="action-btn" data-id="{{item.id}}" bindtap="onToggleExpand">{{item.expanded ? '收起详情' : '查看详情'}}</button>
+          <button size="mini" class="danger-btn" loading="{{deletingId === item.id}}" data-id="{{item.id}}" bindtap="onDeleteSample">删除样本</button>
+        </view>
+
+        <view class="detail" wx:if="{{item.expanded}}">
+          <view class="meta">模型版本：{{item.modelVersion}}</view>
+          <view class="meta">标签：{{item.tagsText || '-'}}</view>
+          <view class="meta">备注：{{item.note || '-'}}</view>
+          <view class="meta">评语：{{item.coachComment || '-'}}</view>
+        </view>
+      </view>
+
+      <button wx:if="{{hasMore}}" class="load-more" bindtap="onReachBottom" loading="{{loadingMore}}">加载更多</button>
+      <view wx:else class="end-tip">没有更多样本了</view>
+    </view>
+  </block>
+</view>

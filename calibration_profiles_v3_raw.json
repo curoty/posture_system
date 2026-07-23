@@ -1,0 +1,47 @@
+{
+  "schema_version": 2,
+  "profile_kind": "bench_raw_before_any_offset",
+  "source_report": "static_samples\\V3\\waist_cold_start\\calibration_analysis_v3.json",
+  "raw_data_modified": false,
+  "nodes": {
+    "waist": {
+      "node_id": "waist",
+      "sample_rate_hz": 50.0,
+      "calibration_mode": "uncalibrated_raw",
+      "reference_temperature_c": null,
+      "acc_bias": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "gyro_bias": [
+        -0.386265,
+        1.004558,
+        -1.252487
+      ],
+      "acc_temperature_slope": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "gyro_temperature_slope": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "temperature_compensation_enabled": false,
+      "metadata": {
+        "bias_kind": "bench_raw_gyro_mean",
+        "source_report": "static_samples\\V3\\waist_cold_start\\calibration_analysis_v3.json",
+        "included_files": [
+          "database_export-cloud1-1g0419td698cd252-static_sample_nofiltering1.json",
+          "database_export-cloud1-1g0419td698cd252-static_sample_nofiltering2.json",
+          "database_export-cloud1-1g0419td698cd252-static_sample_nofiltering3.json"
+        ],
+        "included_round_count": 3,
+        "excluded_suspect_rounds": true,
+        "temperature_compensation_reason": "disabled_until_valid_dynamic_temperature_profile"
+      }
+    }
+  }
+}

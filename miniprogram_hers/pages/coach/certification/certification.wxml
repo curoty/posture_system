@@ -1,0 +1,67 @@
+<view class="page">
+  <scroll-view class="page-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+    <view class="container">
+      <view class="intro-card">
+        <text class="intro-title">认证说明</text>
+        <text class="intro-text">请上传以下材料，审核通过后即可获得教练认证资格</text>
+      </view>
+
+      <view class="form-card">
+        <view class="form-item">
+          <view class="form-label">
+            <text class="label-text">身份证正面</text>
+            <text class="label-required">*</text>
+          </view>
+          <view class="upload-area" bindtap="chooseIdCardFront">
+            <image wx:if="{{idCardFront}}" class="upload-image" src="{{idCardFront}}" mode="aspectFit" />
+            <view wx:else class="upload-placeholder">
+              <image class="upload-icon" src="/images/icons/profile-camera.svg" mode="aspectFit" />
+              <text class="upload-text">点击上传</text>
+            </view>
+          </view>
+        </view>
+
+        <view class="form-item">
+          <view class="form-label">
+            <text class="label-text">身份证反面</text>
+            <text class="label-required">*</text>
+          </view>
+          <view class="upload-area" bindtap="chooseIdCardBack">
+            <image wx:if="{{idCardBack}}" class="upload-image" src="{{idCardBack}}" mode="aspectFit" />
+            <view wx:else class="upload-placeholder">
+              <image class="upload-icon" src="/images/icons/profile-camera.svg" mode="aspectFit" />
+              <text class="upload-text">点击上传</text>
+            </view>
+          </view>
+        </view>
+
+        <view class="form-item">
+          <view class="form-label">
+            <text class="label-text">资质证明</text>
+            <text class="label-required">*</text>
+          </view>
+          <view class="certificates-area">
+            <view wx:for="{{certificates}}" wx:key="index" class="certificate-item">
+              <image class="certificate-image" src="{{item}}" mode="aspectFit" />
+              <view class="certificate-remove" bindtap="removeCertificate" data-index="{{index}}">
+                <text class="remove-text">×</text>
+              </view>
+            </view>
+            <view class="upload-area add-btn" bindtap="chooseCertificate">
+              <view class="upload-placeholder">
+                <image class="upload-icon" src="/images/icons/profile-plus.svg" mode="aspectFit" />
+                <text class="upload-text">添加资质证明</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="submit-area">
+        <button class="submit-btn {{submitting ? 'disabled' : ''}}" bindtap="submitCertification" disabled="{{submitting}}">
+          <text class="btn-text">{{submitting ? '提交中...' : '提交认证申请'}}</text>
+        </button>
+      </view>
+    </view>
+  </scroll-view>
+</view>

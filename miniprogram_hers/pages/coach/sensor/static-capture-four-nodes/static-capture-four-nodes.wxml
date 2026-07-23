@@ -1,0 +1,47 @@
+<view class="page">
+  <view class="card">
+    <view class="title">四节点静止采集</view>
+    <view class="hint">采集 left_ankle / right_ankle / left_knee / right_knee 四个子节点的原始六轴、芯片温度与时间戳；不执行软件滤波。</view>
+  </view>
+
+  <view class="card">
+    <view class="label">采集类型</view>
+    <picker mode="selector" range="{{phaseOptions}}" range-key="label" value="{{phaseIndex}}" bindchange="onPhaseChange" disabled="{{running}}">
+      <view class="picker">{{phaseOptions[phaseIndex].label}}</view>
+    </picker>
+
+    <view class="label">组号</view>
+    <picker mode="selector" range="{{groupOptions}}" value="{{groupIndex}}" bindchange="onGroupChange" disabled="{{running}}">
+      <view class="picker">第 {{groupOptions[groupIndex]}} 组</view>
+    </picker>
+
+    <view class="status">状态：{{statusText}}</view>
+    <view class="status">进度：{{elapsedSeconds}} / {{targetSeconds}} 秒（{{progress}}%）</view>
+    <view class="status">完整四节点帧：{{totalFrames}} 帧，已保存 {{totalChunks}} 个分块</view>
+
+    <view class="node-grid">
+      <view class="node-item" wx:for="{{['left_ankle','right_ankle','left_knee','right_knee']}}" wx:key="*this">
+        <view class="node-name">{{item === 'left_ankle' ? '左脚踝' : item === 'right_ankle' ? '右脚踝' : item === 'left_knee' ? '左膝' : '右膝'}}</view>
+        <view class="node-count">{{nodeFrames[item] || 0}} 个同步样本</view>
+        <view class="node-dot {{(nodeFrames[item] || 0) > 0 ? 'active' : ''}}"></view>
+      </view>
+    </view>
+
+    <view class="status">最近温度：{{latestTemperature}} °C</view>
+    <view class="status" style="word-break:break-all;">capture_id：{{captureId || '-'}}</view>
+
+    <button class="primary" bindtap="startCapture" loading="{{running}}" disabled="{{running}}">开始采集</button>
+    <button class="danger" bindtap="stopCapture" disabled="{{!running}}">停止并保存</button>
+  </view>
+
+  <view class="card">
+    <view class="label">执行说明</view>
+    <view class="hint">1. 确保四个子节点均已上电，并通过同一 WiFi 热点连接。</view>
+    <view class="hint">2. 先用"30秒链路测试"确认 MQTT、/frames、云函数和数据库通路正常。</view>
+    <view class="hint">3. 固定四个设备，依次采集第1～4组所需时长。</view>
+    <view class="hint">4. 采集过程中所有设备必须绝对静止，页面保持前台。</view>
+    <view class="hint">5. 数据保存至数据库 static_sample_nofiltering 集合。</view>
+  </view>
+
+  <view class="error" wx:if="{{errorText}}">{{errorText}}</view>
+</view>

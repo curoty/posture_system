@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "社区",
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "coach-tab-bar": "/components/coach-tab-bar/index"
+  }
+}

@@ -1,0 +1,25 @@
+<view class="container">
+  <view class="header">
+    <text class="title">数据库初始化</text>
+  </view>
+  
+  <view class="content">
+    <view wx:if="{{loading}}" class="loading">
+      <text>初始化中...</text>
+      <view class="progress-list">
+        <text wx:for="{{progress}}" wx:key="index" class="progress-item">{{item}}</text>
+      </view>
+    </view>
+    
+    <view wx:else class="result">
+      <text class="message">{{message}}</text>
+      <view class="progress-list">
+        <text wx:for="{{progress}}" wx:key="index" class="progress-item">{{item}}</text>
+      </view>
+    </view>
+  </view>
+  
+  <view class="footer">
+    <button bindtap="goBack" class="btn">返回</button>
+  </view>
+</view>

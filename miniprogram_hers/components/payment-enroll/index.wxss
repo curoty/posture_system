@@ -1,0 +1,45 @@
+.enroll-card {
+  margin-top: 24rpx;
+  padding: 24rpx;
+  border-radius: 16rpx;
+  background-color: #ffffff;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.04);
+}
+
+.price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.price-label {
+  font-size: 28rpx;
+  color: #555;
+}
+
+.price-value {
+  font-size: 34rpx;
+  color: #ff6a00;
+  font-weight: 600;
+}
+
+.time-row {
+  margin-bottom: 20rpx;
+}
+
+.time-text {
+  font-size: 24rpx;
+  color: #888;
+}
+
+.enroll-btn {
+  width: 100%;
+  height: 80rpx;
+  line-height: 80rpx;
+  border-radius: 999rpx;
+  background-color: #1989fa;
+  color: #fff;
+  font-size: 30rpx;
+}
+

@@ -50,7 +50,14 @@ JSONL_TO_MODEL_NODE_MAPPING = {
 }
 
 RAW_IMU_CHANNELS = ("ax", "ay", "az", "gx", "gy", "gz")
-SUPPORTED_DERIVED_CHANNELS = ("acc_mag", "gyro_mag")
+
+# "attitude" 展开为 4 个通道: roll/pitch 各自的 sin 与 cos。
+# 它与 acc_mag/gyro_mag 有本质区别 —— 后者只是单个传感器的模长，而 attitude
+# 是**加速度计与陀螺仪互补融合**的产物(见 src/attitude.py)，提供了原始通道里
+# 不存在的物理量: 相对重力的绝对倾角。
+SUPPORTED_DERIVED_CHANNELS = ("acc_mag", "gyro_mag", "attitude")
+
+_ATTITUDE_CHANNEL_COUNT = 4  # sin(roll), sin(pitch), cos(roll), cos(pitch)
 
 
 @dataclass(frozen=True)
@@ -62,9 +69,37 @@ class SequenceConfig:
     missing_fill_value: float = 0.0
     min_valid_nodes: int = 6
 
+    # --- 去噪 (src/denoise.py) ---
+    # 随 checkpoint 持久化，保证推理端复现训练时的预处理。若训练开了去噪而
+    # 推理没开(或反之)，输入分布会漂移，模型表现会莫名下降且极难排查。
+    #
+    # denoise_spikes: 剔除野值尖刺。默认 False 以保持既有模型行为不变；
+    #   新模型建议开启 —— 实测本项目野值率 0.7%，acc 峰值达 228g(物理不可能)，
+    #   会严重污染 z-score 归一化以及质量模型的方差/jerk 特征。
+    #   去噪必须在姿态解算**之前**，否则野值会被陀螺积分放大。
+    denoise_spikes: bool = False
+    # denoise_lowpass_hz: 低通截止频率(Hz)，None = 不做低通。
+    #   实测本项目高频抖动仅占信号幅值 2%，低通收益极小，且有抹掉真实快速
+    #   运动(蹬冰/落冰)的风险，故默认关闭。
+    denoise_lowpass_hz: Optional[float] = None
+    # 实际采样率，仅低通滤波需要。本项目实测中位数约 20Hz。
+    sample_rate_hz: float = 20.0
+
     @property
     def channels(self) -> Tuple[str, ...]:
-        return tuple(self.raw_channels) + tuple(self.derived_channels)
+        """展开后的**逐节点**通道名。
+
+        注意 ``attitude`` 并非单通道 —— 它展开成 4 个 (roll/pitch 的 sin,cos)。
+        因此不能简单地把 derived_channels 拼接进来，否则 input_dim 会算错，
+        导致模型输入维度与实际张量不符。
+        """
+        expanded: list[str] = list(self.raw_channels)
+        for name in self.derived_channels:
+            if name == "attitude":
+                expanded += ["roll_sin", "pitch_sin", "roll_cos", "pitch_cos"]
+            else:
+                expanded.append(name)
+        return tuple(expanded)
 
     @property
     def input_dim(self) -> int:
@@ -81,6 +116,7 @@ class SequenceConfig:
 
     @classmethod
     def from_dict(cls, payload: Dict[str, Any]) -> "SequenceConfig":
+        lowpass = payload.get("denoise_lowpass_hz")
         return cls(
             sequence_length=int(payload.get("sequence_length", 180)),
             node_order=tuple(str(item) for item in payload.get("node_order", BASELINE_NODE_ORDER)),
@@ -88,6 +124,9 @@ class SequenceConfig:
             derived_channels=tuple(str(item) for item in payload.get("derived_channels", ())),
             missing_fill_value=float(payload.get("missing_fill_value", 0.0)),
             min_valid_nodes=int(payload.get("min_valid_nodes", 6)),
+            denoise_spikes=bool(payload.get("denoise_spikes", False)),
+            denoise_lowpass_hz=None if lowpass is None else float(lowpass),
+            sample_rate_hz=float(payload.get("sample_rate_hz", 20.0)),
         )
 
 
@@ -141,7 +180,22 @@ def _resample_sequence(sequence: np.ndarray, target_length: int) -> np.ndarray:
     return resampled.reshape(target_length, *sequence.shape[1:]).astype(np.float32)
 
 
-def _append_derived_channels(sequence: np.ndarray, derived_channels: Sequence[str]) -> np.ndarray:
+def _append_derived_channels(
+    sequence: np.ndarray,
+    derived_channels: Sequence[str],
+    timestamps: Optional[np.ndarray] = None,
+) -> np.ndarray:
+    """在原始 6 通道之后追加派生通道。
+
+    Args:
+        sequence: [T, N, 6] 原始 IMU。
+        timestamps: [T] 每帧真实时间戳(秒)。仅 ``attitude`` 需要 —— 姿态解算
+            靠陀螺仪积分，必须用真实 dt。本项目采样抖动大(78.8% 的样本
+            变异系数 >0.3)，用固定 dt 会让多数样本积分失真。
+
+    重要: 本函数必须在**重采样之前**调用。重采样会把序列插值到固定长度，
+    真实的帧间时间间隔随之失去意义，届时再解算姿态就是错的。
+    """
     if not derived_channels:
         return sequence
 
@@ -151,6 +205,14 @@ def _append_derived_channels(sequence: np.ndarray, derived_channels: Sequence[st
             pieces.append(np.linalg.norm(sequence[:, :, 0:3], axis=2, keepdims=True))
         elif channel == "gyro_mag":
             pieces.append(np.linalg.norm(sequence[:, :, 3:6], axis=2, keepdims=True))
+        elif channel == "attitude":
+            if timestamps is None:
+                raise ValueError("derived channel 'attitude' requires timestamps")
+            from src.attitude import attitude_to_channels, solve_attitude_sequence
+
+            euler = solve_attitude_sequence(sequence, timestamps)
+            # 丢弃 yaw: 6 轴 IMU 无磁力计，yaw 由纯陀螺积分而来，必然漂移。
+            pieces.append(attitude_to_channels(euler, drop_yaw=True))
         else:
             raise ValueError(f"Unsupported derived channel: {channel}")
     return np.concatenate(pieces, axis=2).astype(np.float32)
@@ -227,7 +289,25 @@ def convert_record_to_sequence(
                 fill_value=config.missing_fill_value,
             )
 
-    sequence = _append_derived_channels(raw_sequence, config.derived_channels)
+    # 去噪必须在 NaN 填充**之后**(否则中位数被 NaN 污染)、姿态解算**之前**
+    # (否则 228g 量级的野值会被陀螺积分放大，姿态瞬间发散)。
+    outliers_replaced = 0
+    if config.denoise_spikes or config.denoise_lowpass_hz is not None:
+        from src.denoise import denoise_sequence
+        raw_sequence, denoise_stats = denoise_sequence(
+            raw_sequence,
+            sample_rate_hz=config.sample_rate_hz,
+            remove_spikes=config.denoise_spikes,
+            lowpass_cutoff_hz=config.denoise_lowpass_hz,
+        )
+        outliers_replaced = denoise_stats["outliers_replaced"]
+
+    # 派生通道必须在重采样**之前**计算: 姿态解算依赖真实帧间隔 dt，
+    # 而重采样会把序列插值到固定长度，真实时间间隔随之失效。
+    timestamps_for_attitude = np.asarray(timestamps, dtype=np.float64)
+    sequence = _append_derived_channels(
+        raw_sequence, config.derived_channels, timestamps=timestamps_for_attitude,
+    )
     sequence = _resample_sequence(sequence, config.sequence_length)
     sequence = sequence.reshape(config.sequence_length, config.input_dim).astype(np.float32)
 
@@ -248,6 +328,9 @@ def convert_record_to_sequence(
         "duration_seconds": float(np.max(timestamps_array) - np.min(timestamps_array)) if len(timestamps_array) > 1 else 0.0,
         "valid_nodes": int(valid_nodes),
         "missing_node_ratio": float(1.0 - np.mean(valid_node_frames)),
+        # 被替换的野值点数。生产环境可据此监控传感器健康度 —— 该值突然升高
+        # 通常意味着某个节点的传感器或链路出了问题。
+        "outliers_replaced": int(outliers_replaced),
         "input_dim": int(config.input_dim),
         "sequence_length": int(config.sequence_length),
     }

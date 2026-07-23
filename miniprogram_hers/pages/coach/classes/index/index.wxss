@@ -1,0 +1,208 @@
+.page {
+  min-height: 100vh;
+  background: #f5f7fa;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 28rpx;
+  background: #fff;
+  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.04);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.header-left {
+  width: 100rpx;
+}
+
+.back-icon {
+  font-size: 36rpx;
+  color: #333;
+}
+
+.header-title {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.header-right {
+  width: 160rpx;
+  text-align: right;
+}
+
+.create-btn {
+  font-size: 26rpx;
+  color: #35c66b;
+  font-weight: 600;
+}
+
+.page-scroll {
+  padding: 24rpx;
+  box-sizing: border-box;
+}
+
+.loading-state,
+.error-state,
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 40rpx;
+}
+
+.error-text {
+  font-size: 28rpx;
+  color: #999;
+  margin-bottom: 24rpx;
+}
+
+.retry-btn {
+  padding: 16rpx 40rpx;
+  border-radius: 100rpx;
+  background: #35c66b;
+  color: #fff;
+  font-size: 26rpx;
+  border: none;
+}
+
+.empty-icon {
+  font-size: 80rpx;
+  margin-bottom: 20rpx;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: #999;
+  margin-bottom: 32rpx;
+}
+
+.create-btn-full {
+  padding: 20rpx 48rpx;
+  border-radius: 100rpx;
+  background: #35c66b;
+  color: #fff;
+  font-size: 28rpx;
+  border: none;
+  font-weight: 600;
+}
+
+.class-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.class-card {
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 28rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.04);
+}
+
+.class-card.other-class {
+  opacity: 0.85;
+  border: 2rpx solid #e8eef4;
+}
+
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.class-name-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  flex: 1;
+  min-width: 0;
+}
+
+.class-name {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.other-tag {
+  font-size: 20rpx;
+  color: #f5a623;
+  background: #fff7e6;
+  padding: 4rpx 12rpx;
+  border-radius: 6rpx;
+  white-space: nowrap;
+}
+
+.student-count {
+  font-size: 26rpx;
+  color: #35c66b;
+  background: #f0faf4;
+  padding: 6rpx 18rpx;
+  border-radius: 100rpx;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.class-desc {
+  font-size: 26rpx;
+  color: #666;
+  line-height: 1.5;
+  margin-bottom: 16rpx;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-bottom: 16rpx;
+}
+
+.meta-item {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.coach-meta {
+  color: #49bdf5;
+}
+
+.card-actions {
+  display: flex;
+  gap: 16rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.action-btn {
+  flex: 1;
+  text-align: center;
+  padding: 14rpx 0;
+  border-radius: 12rpx;
+  font-size: 24rpx;
+  font-weight: 600;
+}
+
+.action-edit {
+  background: #eaf4ff;
+  color: #49bdf5;
+}
+
+.action-delete {
+  background: #fff3f2;
+  color: #f45b5b;
+}
+
+.safe-bottom {
+  height: 40rpx;
+}

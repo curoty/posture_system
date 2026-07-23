@@ -1,0 +1,44 @@
+<view class="container">
+  <form bindsubmit="submitTrainingRecord">
+    <view class="form-section">
+      <text class="section-title">任务内容</text>
+      <text class="batch-tip">发布后将自动下发给你名下全部学生</text>
+      <view class="form-group">
+        <text class="form-label">训练日期</text>
+        <picker mode="date" bindchange="bindDateChange" value="{{trainingDate}}" class="form-input">
+          <view class="picker-text">
+            {{trainingDate}}
+          </view>
+        </picker>
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">训练类型</text>
+        <input placeholder="请输入训练类型" value="{{trainingType}}" bindinput="bindTypeInput" class="form-input"/>
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">训练时长（分钟）</text>
+        <input type="number" placeholder="请输入训练时长" value="{{duration}}" bindinput="bindDurationInput" class="form-input"/>
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">训练强度</text>
+        <picker bindchange="bindIntensityChange" range="{{intensities}}" class="form-input">
+          <view class="picker-text">
+            {{selectedIntensity}}
+          </view>
+        </picker>
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">训练内容</text>
+        <textarea placeholder="请输入训练内容" value="{{content}}" bindinput="bindContentInput" class="form-textarea"></textarea>
+      </view>
+    </view>
+
+    <button form-type="submit" class="submit-btn" loading="{{submitting}}" disabled="{{submitting}}">
+      {{submitting ? '发布中...' : '发布训练任务'}}
+    </button>
+  </form>
+</view>

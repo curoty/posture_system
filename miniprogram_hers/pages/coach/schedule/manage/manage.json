@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "课程管理",
+  "usingComponents": {
+    "coach-tab-bar": "/components/coach-tab-bar/index"
+  }
+}

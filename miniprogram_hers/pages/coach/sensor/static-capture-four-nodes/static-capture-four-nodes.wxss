@@ -1,0 +1,50 @@
+.page { padding: 24rpx; background: #f5f7fa; min-height: 100vh; }
+.card { background: #fff; border-radius: 18rpx; padding: 28rpx; margin-bottom: 22rpx; }
+.title { font-size: 36rpx; font-weight: 700; margin-bottom: 14rpx; }
+.label { font-size: 28rpx; font-weight: 600; margin: 22rpx 0 10rpx; }
+.picker { border: 1px solid #dce1e8; border-radius: 12rpx; padding: 20rpx; }
+.hint, .status { color: #596273; font-size: 26rpx; line-height: 1.7; }
+.primary { margin-top: 28rpx; background: #2563eb; color: #fff; }
+.danger { margin-top: 16rpx; background: #fff1f0; color: #c62828; }
+.error { margin: 20rpx; padding: 20rpx; background: #fff1f0; color: #c62828; border-radius: 12rpx; }
+
+/* 四节点状态网格 */
+.node-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin: 20rpx 0;
+}
+.node-item {
+  flex: 1 1 calc(50% - 8rpx);
+  min-width: 140rpx;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 14rpx;
+  padding: 18rpx 16rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.node-name {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 6rpx;
+}
+.node-count {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #2563eb;
+}
+.node-dot {
+  width: 14rpx;
+  height: 14rpx;
+  border-radius: 50%;
+  background: #d1d5db;
+  margin-top: 8rpx;
+}
+.node-dot.active {
+  background: #22c55e;
+  box-shadow: 0 0 8rpx rgba(34, 197, 94, 0.4);
+}

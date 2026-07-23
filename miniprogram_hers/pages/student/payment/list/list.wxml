@@ -1,0 +1,70 @@
+<view class="mall-page">
+  <view class="search-row">
+    <view class="search-box">
+      <image class="search-icon" src="../../../../images/icons/mall-search.svg" mode="aspectFit"></image>
+      <input
+        class="search-input"
+        placeholder="搜索商品"
+        placeholder-class="search-placeholder"
+        bindinput="bindSearchInput"
+      />
+    </view>
+    <view class="search-btn" bindtap="handleSearchTap">搜索</view>
+    <view class="cart-btn">
+      <image class="cart-icon" src="../../../../images/icons/mall-cart.svg" mode="aspectFit"></image>
+    </view>
+  </view>
+
+  <view wx:if="{{loadError}}" class="error-tip">{{loadError}}</view>
+
+  <view class="promo-banner">
+    <image class="promo-bg" src="cloud://cloud1-1g0419td698cd252.636c-cloud1-1g0419td698cd252-1410931851/images/mall-banner-bg.png" mode="aspectFill"></image>
+    <view class="promo-mask"></view>
+    <view class="promo-copy">
+      <text class="promo-title">专业装备</text>
+      <text class="promo-subtitle">助力成长</text>
+      <view class="promo-btn">立即选购吧</view>
+    </view>
+    <image class="promo-kid" src="cloud://cloud1-1g0419td698cd252.636c-cloud1-1g0419td698cd252-1410931851/images/mall-banner-kid.png" mode="aspectFit"></image>
+  </view>
+
+  <view class="category-grid">
+    <view
+      wx:for="{{categoryOptions}}"
+      wx:key="key"
+      class="category-item {{activeCategory === item.key ? 'active' : ''}}"
+      data-category="{{item.key}}"
+      bindtap="bindCategoryTap"
+    >
+      <image class="category-icon" src="{{item.icon}}" mode="aspectFit"></image>
+      <text class="category-label">{{item.label}}</text>
+    </view>
+  </view>
+
+  <view class="section-header">
+    <text class="section-title">{{activeCategoryLabel || '热门推荐'}}</text>
+    <text class="section-more" bindtap="clearCategoryFilter">查看更多 ></text>
+  </view>
+
+  <view class="goods-grid">
+    <view wx:for="{{activities}}" wx:key="id" class="goods-card" bindtap="openDetail" data-id="{{item.id}}">
+      <view class="goods-image-wrap">
+        <image
+          class="goods-image"
+          src="{{item.displayImageUrl || item.imageUrl}}"
+          mode="aspectFit"
+          data-id="{{item.id}}"
+          binderror="handleActivityImageError"
+        ></image>
+      </view>
+      <view class="goods-body">
+        <text class="goods-title">{{item.title}}</text>
+        <text class="goods-price">{{item.priceText}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{!loading && activities.length === 0 && !loadError}}" class="empty-tip-row">
+    <text class="empty-tip">{{emptyTip}}</text>
+  </view>
+</view>

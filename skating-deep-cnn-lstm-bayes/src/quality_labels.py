@@ -7,7 +7,7 @@ score (0–100) with dynamic label mapping.
 
 from __future__ import annotations
 
-from typing import Dict, Sequence, Tuple
+from typing import Any, Dict, Sequence, Tuple
 
 import numpy as np
 

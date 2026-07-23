@@ -1,0 +1,14 @@
+{
+  "timeout": 20,
+  "memorySize": 256,
+  "permissions": {
+    "openapi": []
+  },
+  "envVariables": {
+    "MYSQL_HOST": "sh-cynosdbmysql-grp-izy3npum.sql.tencentcdb.com",
+    "MYSQL_PORT": "27633",
+    "MYSQL_DATABASE": "cloud1-1g0419td698cd252",
+    "MYSQL_CONNECT_TIMEOUT_MS": "5000",
+    "PASSWORD_HASH_SALT": "aiwork_pwd_v1"
+  }
+}

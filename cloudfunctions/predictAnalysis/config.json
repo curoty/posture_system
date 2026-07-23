@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "openapi": []
+  },
+  "envVariables": {
+    "PREDICT_URL": "http://82.156.18.205:18080/infer"
+  }
+}

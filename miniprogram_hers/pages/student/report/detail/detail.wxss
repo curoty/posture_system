@@ -1,0 +1,156 @@
+page {
+  background: linear-gradient(180deg, #eaf8ff 0%, #f3fbff 28%, #ffffff 100%);
+}
+
+.page {
+  min-height: 100vh;
+}
+
+.report-detail-page {
+  min-height: 100vh;
+  padding: 24rpx 24rpx 120rpx;
+  box-sizing: border-box;
+}
+
+.state-card,
+.info-card,
+.comment-card {
+  background: #ffffff;
+  border-radius: 28rpx;
+  box-shadow: 0 12rpx 28rpx rgba(22, 55, 94, 0.06);
+}
+
+.state-card {
+  padding: 34rpx 28rpx;
+  text-align: center;
+}
+
+.state-text {
+  font-size: 24rpx;
+  color: #8a98a8;
+}
+
+.error-card {
+  border: 2rpx solid #ffd8d6;
+}
+
+.error-text {
+  color: #ea5b52;
+}
+
+.report-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 22rpx;
+}
+
+.hero-card {
+  padding: 30rpx 28rpx;
+  border-radius: 32rpx;
+  background: linear-gradient(135deg, #35c66b 0%, #62d893 48%, #78ddbf 100%);
+  box-shadow: 0 16rpx 36rpx rgba(53, 198, 107, 0.16);
+}
+
+.hero-eyebrow,
+.hero-title,
+.hero-time,
+.flower-label,
+.flower-value {
+  display: block;
+}
+
+.hero-eyebrow {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.hero-title {
+  margin-top: 10rpx;
+  font-size: 38rpx;
+  line-height: 1.35;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.hero-time {
+  margin-top: 10rpx;
+  font-size: 22rpx;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.flower-card {
+  margin-top: 24rpx;
+  padding: 20rpx 22rpx;
+  border-radius: 26rpx;
+  background: rgba(255, 247, 232, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.flower-label {
+  font-size: 22rpx;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.flower-value {
+  margin-top: 8rpx;
+  font-size: 32rpx;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.flower-icons {
+  flex-shrink: 0;
+  font-size: 26rpx;
+}
+
+.info-card,
+.comment-card {
+  padding: 28rpx 24rpx;
+}
+
+.section-title {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 800;
+  color: #1f2933;
+}
+
+.info-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20rpx;
+  padding: 22rpx 0;
+  border-bottom: 2rpx solid #f1f5f8;
+}
+
+.info-item:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.info-label {
+  font-size: 24rpx;
+  color: #8a98a8;
+}
+
+.info-value {
+  max-width: 420rpx;
+  text-align: right;
+  font-size: 24rpx;
+  line-height: 1.6;
+  color: #1f2933;
+  font-weight: 700;
+}
+
+.comment-text {
+  display: block;
+  margin-top: 18rpx;
+  font-size: 24rpx;
+  line-height: 1.8;
+  color: #617181;
+  white-space: pre-wrap;
+}

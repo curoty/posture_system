@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "教练首页",
+  "usingComponents": {
+    "coach-tab-bar": "/components/coach-tab-bar/index"
+  }
+}

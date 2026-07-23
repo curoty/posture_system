@@ -1,0 +1,12 @@
+{
+  "name": "hunyuanVisionService",
+  "version": "1.0.0",
+  "description": "Hunyuan vision-video bridge for skating action analysis",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"no test specified\""
+  },
+  "dependencies": {
+    "wx-server-sdk": "~2.4.0"
+  }
+}

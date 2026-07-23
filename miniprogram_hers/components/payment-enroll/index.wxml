@@ -1,0 +1,10 @@
+﻿<view class="enroll-card">
+  <view class="price-row">
+    <text class="price-label">商品价格</text>
+    <text class="price-value">¥{{course.price}}</text>
+  </view>
+  <view class="time-row">
+    <text class="time-text">服务时间：{{course.startTime}} 至 {{course.endTime}}</text>
+  </view>
+  <button class="enroll-btn" bindtap="handleEnroll">立即购买</button>
+</view>

@@ -1,0 +1,18 @@
+<view class="coach-tab-bar">
+  <view class="coach-tab-bar-border"></view>
+  <view
+    wx:for="{{items}}"
+    wx:key="key"
+    class="coach-tab-item"
+    data-path="{{item.pagePath}}"
+    data-key="{{item.key}}"
+    bindtap="onTapItem"
+  >
+    <image
+      class="coach-tab-icon"
+      src="{{selected === item.key ? item.selectedIconPath : item.iconPath}}"
+      mode="aspectFit"
+    />
+    <text class="coach-tab-text {{selected === item.key ? 'is-active' : ''}}">{{item.text}}</text>
+  </view>
+</view>

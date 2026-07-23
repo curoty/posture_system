@@ -1,0 +1,47 @@
+<view class="page">
+  <view class="form-card">
+    <view class="form-item">
+      <text class="form-label">班级名称 <text class="required">*</text></text>
+      <input
+        class="form-input"
+        value="{{className}}"
+        placeholder="请输入班级名称，如：初级轮滑班"
+        maxlength="30"
+        bindinput="onNameInput"
+      />
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">班级描述</text>
+      <textarea
+        class="form-textarea"
+        value="{{description}}"
+        placeholder="请输入班级描述（选填）"
+        maxlength="200"
+        bindinput="onDescInput"
+      />
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">上课时间</text>
+      <input
+        class="form-input"
+        value="{{scheduleTime}}"
+        placeholder="如：每周六 10:00（选填）"
+        maxlength="50"
+        bindinput="onScheduleInput"
+      />
+    </view>
+  </view>
+
+  <view class="submit-area">
+    <button
+      class="submit-btn"
+      bindtap="submit"
+      loading="{{submitting}}"
+      disabled="{{submitting}}"
+    >
+      {{isEdit ? '保存修改' : '创建班级'}}
+    </button>
+  </view>
+</view>

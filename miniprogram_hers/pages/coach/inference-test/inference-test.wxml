@@ -1,0 +1,78 @@
+<view class="container">
+  <view class="status-bar">
+    <view class="status-item">
+      <text class="label">状态:</text>
+      <text class="value status-{{connectionStatus}}">
+        {{connectionStatus === 'disconnected' ? '未连接' : 
+          connectionStatus === 'connecting' ? '连接中...' : 
+          '已连接'}}
+      </text>
+    </view>
+    <view class="status-item" wx:if="{{deviceName}}">
+      <text class="label">设备:</text>
+      <text class="value">{{deviceName}}</text>
+    </view>
+    <view class="status-item" wx:if="{{collectedFrames > 0}}">
+      <text class="label">帧数:</text>
+      <text class="value frame-count">{{collectedFrames}}</text>
+    </view>
+  </view>
+
+  <view class="btn-group">
+    <button 
+      class="btn connect-btn {{connectionStatus === 'connected' ? 'secondary' : 'primary'}}" 
+      bindtap="onTapConnect"
+      loading="{{connectionStatus === 'connecting'}}"
+    >
+      {{connectionStatus === 'connected' ? '重新连接' : '连接蓝牙'}}
+    </button>
+
+    <button 
+      class="btn collect-btn {{isCollecting ? 'danger' : (connectionStatus === 'connected' ? 'success' : 'disabled-success')}}" 
+      bindtap="onTapToggleCollect"
+      disabled="{{connectionStatus !== 'connected'}}"
+    >
+      {{isCollecting ? '停止采集' : '开始采集'}}
+    </button>
+
+    <button 
+      class="btn release-btn {{connectionStatus === 'connected' ? 'warn' : 'disabled-warn'}}" 
+      bindtap="onTapRelease"
+      disabled="{{connectionStatus !== 'connected'}}"
+    >
+      释放连接
+    </button>
+  </view>
+
+  <view class="logs-container">
+    <view class="logs-title">日志输出</view>
+    <scroll-view class="logs-content" scroll-y="{{true}}" scroll-into-view="log-{{logs.length - 1}}">
+      <view 
+        wx:for="{{logs}}" 
+        wx:key="index" 
+        id="log-{{index}}"
+        class="log-item {{index === logs.length - 1 ? 'latest' : ''}}"
+      >
+        {{item}}
+      </view>
+    </scroll-view>
+  </view>
+
+  <view class="result-card" wx:if="{{resultVisible}}">
+    <view class="result-title">AI 分析结果</view>
+    <view class="score-row">
+      <text class="score-number">{{score}}</text>
+      <text class="score-label">分</text>
+    </view>
+    <view class="comment-area">{{comment}}</view>
+    <view class="comment-area" wx:if="{{advice}}">{{advice}}</view>
+  </view>
+
+  <view class="help-text">
+    <text>\n提示:\n</text>
+    <text>1. 首次进入点击「连接蓝牙」\n</text>
+    <text>2. 连接成功后可多次「开始/停止采集」\n</text>
+    <text>3. 满 180 帧自动停止并分析\n</text>
+    <text>4. 打开 vConsole 看 console 详细日志</text>
+  </view>
+</view>

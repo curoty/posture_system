@@ -1,0 +1,83 @@
+<view class="page">
+  <scroll-view class="page-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+    <view class="container">
+      <view class="hero-card">
+        <text class="hero-title">课程管理</text>
+        <text class="hero-subtitle">安排上课时间，统一管理教练课时发布</text>
+      </view>
+
+      <view wx:if="{{isAdmin}}" class="card selector-card">
+        <view class="card-head">
+          <text class="card-title">发布对象</text>
+          <text class="card-subtitle">已选 {{selectedCoachCount}} / {{totalCoachCount}}</text>
+        </view>
+        <view class="selector-actions">
+          <view class="mini-btn" bindtap="onSelectAllCoaches">全选</view>
+          <view class="mini-btn ghost" bindtap="onClearCoachSelection">清空</view>
+        </view>
+        <checkbox-group bindchange="onCoachMultiChange">
+          <label wx:for="{{coachOptions}}" wx:key="id" class="coach-item">
+            <checkbox class="coach-checkbox" value="{{item.id}}" checked="{{item.checked}}" color="#35C66B" />
+            <view class="coach-meta">
+              <text class="coach-name">{{item.name}}</text>
+              <text wx:if="{{item.levelLabel}}" class="coach-level">{{item.levelLabel}}</text>
+            </view>
+          </label>
+        </checkbox-group>
+        <view wx:if="{{!coachOptions.length}}" class="coach-empty">当前没有可管理的教练账号</view>
+      </view>
+
+      <view wx:if="{{canPublishPermission}}" class="card publish-card">
+        <view class="card-head">
+          <text class="card-title">课时发布</text>
+        </view>
+
+        <picker mode="date" value="{{form.date}}" bindchange="onDateChange">
+          <view class="field-card">
+            <text class="field-label">上课日期</text>
+            <text class="field-value {{form.date ? '' : 'placeholder'}}">{{form.date || '请选择日期'}}</text>
+          </view>
+        </picker>
+
+        <view class="time-row">
+          <picker class="time-picker" mode="time" value="{{form.startTime}}" bindchange="onStartTimeChange">
+            <view class="field-card">
+              <text class="field-label">开始时间</text>
+              <text class="field-value {{form.startTime ? '' : 'placeholder'}}">{{form.startTime || '选择开始时间'}}</text>
+            </view>
+          </picker>
+          <picker class="time-picker" mode="time" value="{{form.endTime}}" bindchange="onEndTimeChange">
+            <view class="field-card">
+              <text class="field-label">结束时间</text>
+              <text class="field-value {{form.endTime ? '' : 'placeholder'}}">{{form.endTime || '选择结束时间'}}</text>
+            </view>
+          </picker>
+        </view>
+
+        <view class="notes-card">
+          <text class="field-label">补充说明（可选）</text>
+          <textarea
+            class="notes-input"
+            maxlength="300"
+            value="{{form.notes}}"
+            bindinput="onNotesInput"
+            placeholder="填写课程说明、场馆信息或特别提醒"
+          />
+        </view>
+
+        <button class="submit-btn" bindtap="onCreateSlot" loading="{{creating}}" disabled="{{creating || generatingWeekly}}">
+          {{creating ? '发布中...' : '发布课程'}}
+        </button>
+
+        <button class="weekly-btn" bindtap="onGenerateWeeklySlots" loading="{{generatingWeekly}}" disabled="{{generatingWeekly || creating}}">
+          {{generatingWeekly ? '生成中...' : '按周生成固定课表'}}
+        </button>
+
+        <text class="weekly-tip">固定模板会按当前系统配置生成本周常规课时，不会覆盖已发布课程。</text>
+      </view>
+
+      <view wx:else class="readonly-tip">当前账号暂无课时发布权限。</view>
+    </view>
+  </scroll-view>
+  <coach-tab-bar selected="course" />
+</view>

@@ -1,0 +1,403 @@
+.page {
+  min-height: 100vh;
+  background: #f5f7fa;
+}
+
+.page-scroll {
+  padding: 24rpx;
+  box-sizing: border-box;
+}
+
+.loading-state,
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 160rpx 40rpx;
+}
+
+.error-text {
+  font-size: 28rpx;
+  color: #999;
+  margin-bottom: 24rpx;
+}
+
+.retry-btn {
+  padding: 16rpx 40rpx;
+  border-radius: 100rpx;
+  background: #35c66b;
+  color: #fff;
+  font-size: 26rpx;
+  border: none;
+}
+
+/* 班级信息卡片 */
+.info-card {
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 28rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.04);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.class-name {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.count-badge {
+  font-size: 26rpx;
+  color: #35c66b;
+  background: #f0faf4;
+  padding: 6rpx 18rpx;
+  border-radius: 100rpx;
+  font-weight: 600;
+}
+
+.class-desc {
+  font-size: 26rpx;
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 16rpx;
+}
+
+.info-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-bottom: 16rpx;
+}
+
+.meta-item {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.info-actions {
+  display: flex;
+  gap: 16rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.act-btn {
+  flex: 1;
+  text-align: center;
+  padding: 14rpx 0;
+  border-radius: 10rpx;
+  font-size: 24rpx;
+  font-weight: 600;
+}
+
+.act-edit {
+  background: #eaf4ff;
+  color: #49bdf5;
+}
+
+.act-delete {
+  background: #fff3f2;
+  color: #f45b5b;
+}
+
+/* 学员区域 */
+.student-section {
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 28rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.04);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.add-btn {
+  font-size: 24rpx;
+  color: #35c66b;
+  font-weight: 600;
+  background: #f0faf4;
+  padding: 8rpx 20rpx;
+  border-radius: 100rpx;
+}
+
+.empty-students {
+  padding: 60rpx 0;
+  text-align: center;
+}
+
+.empty-text {
+  font-size: 26rpx;
+  color: #bbb;
+}
+
+.student-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.student-card {
+  border: 2rpx solid #f0f3f7;
+  border-radius: 16rpx;
+  padding: 20rpx;
+}
+
+.student-info {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.student-avatar {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  background: #e8eef4;
+}
+
+.student-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.student-name {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.student-phone {
+  display: block;
+  font-size: 22rpx;
+  color: #999;
+  margin-top: 4rpx;
+}
+
+.student-lesson {
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.lesson-label {
+  display: block;
+  font-size: 20rpx;
+  color: #999;
+}
+
+.lesson-value {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #35c66b;
+}
+
+.student-actions {
+  display: flex;
+  gap: 12rpx;
+  margin-top: 16rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid #f7f7f7;
+}
+
+.s-act {
+  flex: 1;
+  text-align: center;
+  padding: 10rpx 0;
+  border-radius: 8rpx;
+  font-size: 22rpx;
+  font-weight: 600;
+}
+
+.s-transfer {
+  background: #fef7e8;
+  color: #f5a623;
+}
+
+.s-remove {
+  background: #fff3f2;
+  color: #f45b5b;
+}
+
+.safe-bottom {
+  height: 48rpx;
+}
+
+/* ========== 弹窗样式 ========== */
+.modal-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 100;
+}
+
+.modal-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-height: 70vh;
+  background: #fff;
+  border-radius: 28rpx 28rpx 0 0;
+  z-index: 101;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 28rpx 28rpx 16rpx;
+  border-bottom: 1rpx solid #f5f5f5;
+  flex-shrink: 0;
+}
+
+.modal-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.modal-close {
+  font-size: 36rpx;
+  color: #bbb;
+  padding: 8rpx;
+}
+
+.modal-scroll {
+  flex: 1;
+  padding: 16rpx 28rpx;
+  max-height: 50vh;
+}
+
+.modal-loading,
+.modal-empty {
+  text-align: center;
+  padding: 60rpx 0;
+  font-size: 26rpx;
+  color: #999;
+}
+
+.modal-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.modal-item-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.modal-item-phone {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.modal-item-add {
+  font-size: 24rpx;
+  color: #35c66b;
+  font-weight: 600;
+  padding: 8rpx 20rpx;
+  background: #f0faf4;
+  border-radius: 100rpx;
+}
+
+/* 移交班选列表 */
+.transfer-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 22rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.transfer-item.selected {
+  background: #f6fff8;
+  margin: 0 -16rpx;
+  padding-left: 16rpx;
+  padding-right: 16rpx;
+  border-radius: 12rpx;
+}
+
+.transfer-item-name {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.transfer-item-coach {
+  display: block;
+  font-size: 22rpx;
+  color: #999;
+  margin-top: 4rpx;
+}
+
+.transfer-check {
+  width: 40rpx;
+  height: 40rpx;
+  line-height: 40rpx;
+  text-align: center;
+  background: #35c66b;
+  color: #fff;
+  border-radius: 50%;
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 20rpx;
+  padding: 20rpx 28rpx 28rpx;
+  border-top: 1rpx solid #f5f5f5;
+  flex-shrink: 0;
+}
+
+.m-btn {
+  flex: 1;
+  height: 76rpx;
+  line-height: 76rpx;
+  text-align: center;
+  border-radius: 14rpx;
+  border: none;
+  font-size: 28rpx;
+  font-weight: 600;
+  padding: 0;
+}
+
+.m-cancel {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.m-confirm {
+  background: linear-gradient(135deg, #35c66b, #2db458);
+  color: #fff;
+}
+
+.m-confirm[disabled] {
+  opacity: 0.6;
+}

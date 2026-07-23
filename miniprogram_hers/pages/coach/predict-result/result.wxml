@@ -1,0 +1,40 @@
+<view class="page">
+  <view class="score-hero">
+    <view class="score-ring {{scoreColor}}">
+      <text class="score-value">{{score}}</text>
+      <text class="score-label">综合评分</text>
+    </view>
+  </view>
+
+  <view class="result-card">
+    <view class="result-row">
+      <text class="row-label">动作质量</text>
+      <view class="quality-badge {{qualityClass}}">
+        <text class="quality-text">{{quality}}</text>
+      </view>
+    </view>
+
+    <view class="divider"></view>
+
+    <view class="result-row">
+      <text class="row-label">置信度</text>
+      <text class="row-value">{{confidence}}%</text>
+    </view>
+  </view>
+
+  <view class="comment-card" wx:if="{{advice}}">
+    <view class="comment-head">
+      <text class="comment-title">AI 建议</text>
+      <view class="voice-btn {{voicePlaying ? 'voice-playing' : ''}}" bindtap="onToggleVoice">
+        <text class="voice-icon">{{voicePlaying ? '⏸' : '🔊'}}</text>
+        <text class="voice-text">{{voicePlaying ? '暂停' : '播报'}}</text>
+      </view>
+    </view>
+    <text class="comment-text">{{advice}}</text>
+  </view>
+
+  <view class="bottom-actions">
+    <button class="action-btn back-btn" bindtap="onGoBack">返回</button>
+    <button class="action-btn save-btn" bindtap="onSaveResult">保存结果</button>
+  </view>
+</view>

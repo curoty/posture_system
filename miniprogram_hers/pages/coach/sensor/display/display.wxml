@@ -1,0 +1,128 @@
+<view class="page">
+  <view class="topbar">
+    <view class="topbar-left">
+      <text class="title">传感器实时大屏</text>
+      <text class="subtitle">更新时间 {{capturedAtText}}</text>
+    </view>
+    <view class="topbar-actions">
+      <text class="text-btn" bindtap="onTapRefresh">刷新</text>
+      <text class="text-btn" bindtap="onTapBack">返回</text>
+    </view>
+  </view>
+
+  <view class="card empty-card" wx:if="{{!hasSnapshot}}">
+    <text class="empty-text">{{emptyTip}}</text>
+  </view>
+
+  <block wx:else>
+    <view class="card meta-card">
+      <view class="meta-row">
+        <view class="meta-pill">会话：{{sessionId || '-'}}</view>
+        <view class="meta-pill">动作：{{actionTypeLabel || '-'}}</view>
+        <view class="meta-pill">来源：{{sourceTypeLabel || '-'}}</view>
+      </view>
+      <view class="meta-row">
+        <view class="meta-pill">目标帧：{{frameCount}}</view>
+        <view class="meta-pill">间隔：{{sampleIntervalMs}}ms</view>
+      </view>
+    </view>
+
+    <view class="card flow-card {{analyzeFlowDone ? 'done' : ''}}" wx:if="{{analyzeFlowVisible}}">
+      <view class="flow-head">
+        <view class="flow-head-left">
+          <text class="flow-title">实时分析过程</text>
+          <text class="flow-status">{{analyzeFlowStatusText}}</text>
+        </view>
+        <text class="flow-progress-value">{{analyzeFlowProgress}}%</text>
+      </view>
+      <view class="flow-progress-track">
+        <view class="flow-progress-fill" style="width: {{analyzeFlowProgress}}%;"></view>
+      </view>
+      <view class="flow-meta-row">
+        <text class="flow-meta-item">耗时 {{analyzeFlowElapsedSec}}s</text>
+        <text class="flow-meta-item">帧目标 {{frameCount}}</text>
+        <text class="flow-meta-item">间隔 {{sampleIntervalMs}}ms</text>
+      </view>
+      <view class="flow-bars">
+        <view wx:for="{{analyzeFlowBars}}" wx:key="id" class="flow-bar" style="height: {{item.height}}rpx;"></view>
+      </view>
+      <view class="flow-stage-row">
+        <view wx:for="{{analyzeFlowStages}}" wx:key="key" class="flow-stage flow-stage-{{item.status}}">
+          <text class="flow-stage-dot"></text>
+          <text class="flow-stage-label">{{item.label}}</text>
+        </view>
+      </view>
+      <view class="flow-metric-grid">
+        <view wx:for="{{analyzeFlowMetrics}}" wx:key="key" class="flow-metric-item">
+          <view class="flow-metric-head">
+            <text class="flow-metric-name">{{item.label}}</text>
+            <text class="flow-metric-score">{{item.score}}</text>
+          </view>
+          <view class="flow-metric-track">
+            <view class="flow-metric-fill" style="width: {{item.score}}%;"></view>
+          </view>
+        </view>
+      </view>
+      <view class="number-stream" wx:if="{{analyzeNumberStream.length}}">
+        <view class="number-stream-title">设备数字流</view>
+        <view class="number-stream-box">
+          <view wx:for="{{analyzeNumberStream}}" wx:key="id" class="number-stream-line number-stream-{{item.tone}}">
+            <text class="number-stream-time">{{item.time}}</text>
+            <text class="number-stream-text">{{item.text}}</text>
+          </view>
+        </view>
+      </view>
+      <view class="flow-events" wx:if="{{analyzeFlowEvents.length}}">
+        <view class="flow-events-title">Flow Log</view>
+        <view wx:for="{{analyzeFlowEvents}}" wx:key="id" class="flow-event-item flow-event-{{item.level}}">
+          <text class="flow-event-time">{{item.time}}</text>
+          <text class="flow-event-text">{{item.text}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="card showcase-card {{resultShowcaseDone ? 'done' : ''}}" wx:if="{{resultShowcaseVisible}}">
+      <view class="showcase-head">
+        <view class="showcase-head-left">
+          <text class="showcase-title">学员可视化报告</text>
+          <text class="showcase-subtitle">{{resultShowcaseActionLabel}}</text>
+          <text class="showcase-summary">{{resultShowcaseSummary}}</text>
+        </view>
+        <view class="showcase-score-ring">
+          <text class="showcase-score-value">{{resultShowcaseModelScore}}</text>
+          <text class="showcase-score-label">模型评分</text>
+        </view>
+      </view>
+      <view class="showcase-pills">
+        <view class="showcase-pill">质量：{{resultShowcaseQualityTag || '待评估'}}</view>
+        <view class="showcase-pill">置信：{{resultShowcaseConfidence}}%</view>
+        <view class="showcase-pill">教练：{{resultShowcaseCoachScore}}分</view>
+        <view class="showcase-pill" wx:if="{{resultShowcaseTags}}">标签：{{resultShowcaseTags}}</view>
+      </view>
+      <view class="showcase-comment">
+        <text class="showcase-comment-label">教练评语</text>
+        <text class="showcase-comment-text">{{resultShowcaseCoachComment}}</text>
+      </view>
+      <view class="showcase-grid">
+        <view class="showcase-panel">
+          <text class="showcase-panel-title good">做得好的地方</text>
+          <view wx:for="{{resultShowcaseStrengths}}" wx:key="index" class="showcase-item good">{{item}}</view>
+          <view class="showcase-item neutral" wx:if="{{!resultShowcaseStrengths.length}}">基础动作已达标，请继续保持节奏稳定。</view>
+        </view>
+        <view class="showcase-panel">
+          <text class="showcase-panel-title improve">还需改进</text>
+          <view wx:for="{{resultShowcaseImprovements}}" wx:key="index" class="showcase-item improve">{{item}}</view>
+          <view class="showcase-item neutral" wx:if="{{!resultShowcaseImprovements.length}}">暂无明显短板，可逐步提升动作速度与连贯性。</view>
+        </view>
+      </view>
+      <view class="showcase-tips" wx:if="{{resultShowcaseTips.length}}">
+        <text class="showcase-tips-title">训练建议</text>
+        <view wx:for="{{resultShowcaseTips}}" wx:key="index" class="showcase-tip">{{item}}</view>
+      </view>
+    </view>
+
+    <view class="card error-card" wx:if="{{errorTip}}">
+      <text class="error-text">{{errorTip}}</text>
+    </view>
+  </block>
+</view>

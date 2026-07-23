@@ -1,0 +1,259 @@
+.page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #eaf9ff 0%, #f7fcff 220rpx, #f7fafc 100%);
+  padding: 34rpx 30rpx 60rpx;
+  padding-top: calc(34rpx + constant(safe-area-inset-top));
+  padding-top: calc(34rpx + env(safe-area-inset-top));
+  box-sizing: border-box;
+}
+
+.qr-canvas {
+  position: fixed;
+  left: -9999rpx;
+  top: -9999rpx;
+  visibility: hidden;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 48rpx;
+}
+
+.header-title {
+  display: block;
+  font-size: 44rpx;
+  font-weight: 800;
+  color: #1f2933;
+  margin-bottom: 12rpx;
+}
+
+.header-desc {
+  display: block;
+  font-size: 26rpx;
+  color: #8a98a8;
+}
+
+.loading-block {
+  padding: 100rpx 0;
+  text-align: center;
+}
+
+.loading-text {
+  font-size: 28rpx;
+  color: #8a98a8;
+}
+
+.invitation-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.qr-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 40rpx;
+}
+
+.qr-wrapper {
+  width: 360rpx;
+  height: 360rpx;
+  border-radius: 28rpx;
+  background: #ffffff;
+  box-shadow: 0 12rpx 40rpx rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.qr-image {
+  width: 320rpx;
+  height: 320rpx;
+}
+
+.qr-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.qr-loading-icon {
+  font-size: 48rpx;
+}
+
+.qr-loading-text {
+  font-size: 24rpx;
+  color: #8a98a8;
+}
+
+.qr-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.qr-placeholder-icon {
+  font-size: 64rpx;
+}
+
+.qr-placeholder-text {
+  font-size: 24rpx;
+  color: #8a98a8;
+}
+
+.qr-tip {
+  margin-top: 16rpx;
+  font-size: 22rpx;
+  color: #8a98a8;
+}
+
+.code-section {
+  width: 100%;
+  max-width: 520rpx;
+  padding: 32rpx 28rpx;
+  background: #ffffff;
+  border-radius: 24rpx;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 28rpx;
+}
+
+.code-label {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #1f2933;
+  margin-bottom: 20rpx;
+}
+
+.code-display {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  padding: 20rpx 32rpx;
+  background: #f7fbff;
+  border-radius: 16rpx;
+  border: 2rpx dashed #35c66b;
+}
+
+.code-text {
+  font-size: 48rpx;
+  font-weight: 800;
+  color: #35c66b;
+  letter-spacing: 12rpx;
+}
+
+.copy-btn {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #ffffff;
+  background: #35c66b;
+  padding: 10rpx 24rpx;
+  border-radius: 10rpx;
+}
+
+.code-tip {
+  margin-top: 18rpx;
+  font-size: 22rpx;
+  color: #8a98a8;
+  text-align: center;
+}
+
+.stats-row {
+  margin-bottom: 36rpx;
+}
+
+.stats-text {
+  font-size: 26rpx;
+  color: #64748b;
+}
+
+.action-row {
+  width: 100%;
+  max-width: 520rpx;
+  display: flex;
+  gap: 20rpx;
+}
+
+.action-btn {
+  flex: 1;
+  height: 88rpx;
+  border-radius: 44rpx;
+  font-size: 28rpx;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-btn::after {
+  border: none;
+}
+
+.regenerate-btn {
+  background: #f2f4f7;
+  color: #64748b;
+}
+
+.share-btn {
+  background: linear-gradient(135deg, #35c66b 0%, #20c76a 100%);
+  color: #ffffff;
+  box-shadow: 0 8rpx 20rpx rgba(53, 198, 107, 0.3);
+}
+
+.empty-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 80rpx 40rpx 0;
+}
+
+.empty-icon {
+  font-size: 100rpx;
+  margin-bottom: 32rpx;
+}
+
+.empty-title {
+  font-size: 34rpx;
+  font-weight: 800;
+  color: #1f2933;
+  margin-bottom: 14rpx;
+}
+
+.empty-desc {
+  font-size: 26rpx;
+  color: #8a98a8;
+  text-align: center;
+  margin-bottom: 48rpx;
+  line-height: 1.5;
+}
+
+.generate-btn {
+  width: 320rpx;
+  height: 88rpx;
+  border-radius: 44rpx;
+  background: linear-gradient(135deg, #35c66b 0%, #20c76a 100%);
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 800;
+  box-shadow: 0 10rpx 24rpx rgba(53, 198, 107, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.generate-btn::after {
+  border: none;
+}

@@ -1,0 +1,86 @@
+<view class="profile-page">
+  <view class="hero-shell">
+    <view class="hero-topbar">
+      <view class="topbar-spacer"></view>
+      <view class="settings-button" bindtap="openSettings">
+        <image class="settings-icon" src="../../../images/icons/profile-setting-white.svg" mode="aspectFit"></image>
+      </view>
+    </view>
+
+    <view class="hero-main">
+      <view class="avatar-wrap" bindtap="changeAvatar">
+        <image class="avatar-image" src="{{userInfo.avatarUrl || defaultAvatarUrl}}" mode="aspectFill"></image>
+      </view>
+      <view class="hero-copy" bindtap="editProfile">
+        <text class="hero-name">{{userInfo.name || '未设置昵称'}}</text>
+        <text class="hero-role">学员</text>
+        <text class="hero-subtitle">一起快乐轮滑吧！</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="content-shell">
+    <view class="stats-card">
+      <view class="stats-grid">
+        <view class="stats-grid-item">
+          <text class="stats-value">{{userInfo.totalFlowers || 0}}</text>
+          <view class="stats-label-row">
+            <text class="stats-label">小红花</text>
+            <image class="stats-icon" src="../../../images/icons/student-flowers.png" mode="aspectFit"></image>
+          </view>
+        </view>
+        <view class="stats-grid-item">
+          <text class="stats-value">{{userInfo.courseCount || 0}}</text>
+          <view class="stats-label-row">
+            <text class="stats-label">已上课程</text>
+            <image class="stats-icon" src="../../../images/icons/student-course-count.png" mode="aspectFit"></image>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="info-card section-card">
+      <view class="info-row">
+        <view class="info-left">
+          <image class="info-icon" src="../../../images/icons/profile-phone.svg" mode="aspectFit"></image>
+          <text class="info-title">手机号</text>
+        </view>
+        <text class="info-value">{{maskedPhone}}</text>
+      </view>
+      <view class="info-row">
+        <view class="info-left">
+          <image class="info-icon" src="../../../images/icons/profile-join.svg" mode="aspectFit"></image>
+          <text class="info-title">加入时间</text>
+        </view>
+        <text class="info-value">{{userInfo.joinDate || '2026-04-22'}}</text>
+      </view>
+    </view>
+
+    <view class="action-card section-card">
+      <view class="action-row phone-action-row" bindtap="bindPhone">
+        <view class="info-left">
+          <image class="info-icon" src="../../../images/icons/profile-phone.svg" mode="aspectFit"></image>
+          <text class="info-title action-title">{{userInfo.phone && userInfo.phone !== '未设置' ? '更换手机号' : '绑定手机号'}}</text>
+        </view>
+        <view class="action-right">
+          <text class="action-phone-text">{{userInfo.phone && userInfo.phone !== '未设置' ? maskedPhone : '点击绑定'}}</text>
+          <image class="arrow-icon" src="../../../images/icons/profile-chevron.svg" mode="aspectFit"></image>
+        </view>
+      </view>
+      <view class="action-row" bindtap="changePassword">
+        <view class="info-left">
+          <image class="info-icon" src="../../../images/icons/profile-lock.svg" mode="aspectFit"></image>
+          <text class="info-title action-title">修改密码</text>
+        </view>
+        <image class="arrow-icon" src="../../../images/icons/profile-chevron.svg" mode="aspectFit"></image>
+      </view>
+      <view class="action-row" bindtap="logout">
+        <view class="info-left">
+          <image class="info-icon" src="../../../images/icons/profile-logout.svg" mode="aspectFit"></image>
+          <text class="info-title action-title logout-title">退出登录</text>
+        </view>
+        <image class="arrow-icon" src="../../../images/icons/profile-chevron.svg" mode="aspectFit"></image>
+      </view>
+    </view>
+  </view>
+</view>

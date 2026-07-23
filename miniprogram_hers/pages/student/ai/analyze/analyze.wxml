@@ -1,0 +1,144 @@
+<view class="page">
+  <view wx:if="{{featureLocked}}" class="panel lock-panel">
+    <text class="lock-title">AI动作分析暂未开放</text>
+    <text class="lock-desc">{{featureLockMessage}}</text>
+  </view>
+
+  <view class="panel">
+    <text class="panel-title">分析类型</text>
+    <picker mode="selector" range="{{sourceTypeOptions}}" range-key="label" value="{{sourceTypeIndex}}" bindchange="onSourceTypeChange">
+      <view class="picker-value">{{sourceTypeOptions[sourceTypeIndex].label}}</view>
+    </picker>
+  </view>
+
+  <view class="panel">
+    <text class="panel-title">{{i18n.actionType}}</text>
+    <picker mode="selector" range="{{actionTypeOptions}}" value="{{actionTypeIndex}}" bindchange="onActionTypeChange">
+      <view class="picker-value">{{actionTypeOptions[actionTypeIndex]}}</view>
+    </picker>
+  </view>
+
+  <view class="panel" wx:if="{{sourceTypeOptions[sourceTypeIndex].value === 'video'}}">
+    <text class="panel-title">{{i18n.actionVideo}}</text>
+    <button class="btn secondary" bindtap="chooseVideo" disabled="{{featureLocked}}">{{i18n.chooseVideo}}</button>
+    <view wx:if="{{videoPath}}" class="video-box">
+      <video src="{{videoPath}}" controls="{{true}}" object-fit="contain" class="video-player" />
+      <text class="video-meta">{{i18n.duration}} {{videoInfo.durationText}} | {{i18n.size}} {{videoInfo.sizeText}}</text>
+    </view>
+  </view>
+
+  <view class="panel" wx:if="{{sourceTypeOptions[sourceTypeIndex].value === 'sensor'}}">
+    <text class="panel-title">传感器参数配置</text>
+    <view class="sensor-config-item">
+      <text class="sensor-config-label">传输方式</text>
+      <picker mode="selector" range="{{transportOptions}}" range-key="label" value="{{transportIndex}}" bindchange="onTransportChange">
+        <view class="sensor-config-picker">{{transportOptions[transportIndex].label}}</view>
+      </picker>
+    </view>
+    <view class="sensor-config-item">
+      <text class="sensor-config-label">采样帧数（24~180）</text>
+      <input class="sensor-config-input" type="number" value="{{sensorFrameCount}}" bindinput="onSensorFrameCountInput" />
+    </view>
+    <view class="sensor-config-item">
+      <text class="sensor-config-label">采样间隔（20~200ms）</text>
+      <input class="sensor-config-input" type="number" value="{{sensorSampleIntervalMs}}" bindinput="onSensorIntervalInput" />
+    </view>
+    <view wx:if="{{transportOptions[transportIndex].value === 'wifi'}}" class="sensor-wifi-config">
+      <view class="sensor-config-item">
+        <text class="sensor-config-label">WiFi设备地址</text>
+        <input class="sensor-config-input" placeholder="192.168.1.100" value="{{wifiHost}}" bindinput="onWifiHostInput" />
+      </view>
+      <view class="sensor-config-item">
+        <text class="sensor-config-label">端口号</text>
+        <input class="sensor-config-input" type="number" placeholder="8080" value="{{wifiPort}}" bindinput="onWifiPortInput" />
+      </view>
+      <button class="btn wifi-btn" loading="{{wifiConnecting}}" bindtap="connectWifiDevice">
+        {{wifiConnected ? '已连接' : '连接WiFi设备'}}
+      </button>
+    </view>
+    <text class="sensor-config-hint">{{transportOptions[transportIndex].value === 'wifi' ? '使用WiFi连接真实传感器设备' : '使用模拟传感器数据进行AI分析，无需连接硬件设备'}}</text>
+  </view>
+
+  <view class="panel">
+    <text class="panel-title">{{i18n.trainingNote}}</text>
+    <textarea
+      class="note-input"
+      maxlength="120"
+      placeholder="{{i18n.notePlaceholder}}"
+      value="{{note}}"
+      disabled="{{featureLocked}}"
+      bindinput="onNoteInput"
+    />
+    <button class="btn primary" loading="{{analyzing}}" disabled="{{analyzing || featureLocked}}" bindtap="analyzeAction">
+      {{featureLocked ? '功能维护中' : (analyzing ? i18n.analyzing : i18n.runAnalysis)}}
+    </button>
+  </view>
+
+  <view wx:if="{{analysisResult}}" class="panel result-panel">
+    <text class="panel-title">{{i18n.analysisResult}}</text>
+    <text class="risk-tag risk-{{analysisResult.riskLevelClass}}">{{analysisResult.riskLevelText}}</text>
+    <text class="summary">{{analysisResult.summary}}</text>
+    <text
+      wx:if="{{analysisResult.noteEcho}}"
+      class="note-echo {{analysisResult.noteEchoMuted ? 'note-echo-muted' : ''}}"
+    >{{analysisResult.noteEcho}}</text>
+
+    <view class="metric-list">
+      <view wx:for="{{analysisResult.metrics}}" wx:key="key" class="metric-item">
+        <view class="metric-head">
+          <text class="metric-name">{{item.name}}</text>
+          <text class="metric-score">{{item.score}}</text>
+        </view>
+        <view class="metric-bar-bg">
+          <view class="metric-bar" style="width: {{item.score}}%;"></view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{analysisResult.phaseScores.length}}" class="detail-block">
+      <text class="tips-title">{{i18n.phaseScores}}</text>
+      <view wx:for="{{analysisResult.phaseScores}}" wx:key="key" class="phase-item">
+        <view class="phase-head">
+          <text class="phase-name">{{item.name}}</text>
+          <text class="phase-score">{{item.score}}</text>
+        </view>
+        <text class="phase-comment">{{item.comment}}</text>
+      </view>
+    </view>
+
+    <view wx:if="{{analysisResult.strengths.length}}" class="detail-block">
+      <text class="tips-title">{{i18n.strengths}}</text>
+      <view wx:for="{{analysisResult.strengths}}" wx:key="key" class="detail-item">
+        <text class="detail-line">{{item.name}} ({{item.score}})</text>
+        <text class="detail-note">{{item.note}}</text>
+      </view>
+    </view>
+
+    <view wx:if="{{analysisResult.weaknesses.length}}" class="detail-block">
+      <text class="tips-title">{{i18n.weaknesses}}</text>
+      <view wx:for="{{analysisResult.weaknesses}}" wx:key="key" class="detail-item">
+        <text class="detail-line">{{item.name}} ({{item.score}})</text>
+        <text class="detail-note">{{item.note}}</text>
+      </view>
+    </view>
+
+    <view wx:if="{{analysisResult.riskAlerts.length}}" class="detail-block">
+      <text class="tips-title">{{i18n.riskAlerts}}</text>
+      <text wx:for="{{analysisResult.riskAlerts}}" wx:key="index" class="tip-item">{{index + 1}}. {{item}}</text>
+    </view>
+
+    <view wx:if="{{analysisResult.trainingPlan.length}}" class="detail-block">
+      <text class="tips-title">{{i18n.trainingPlan}}</text>
+      <view wx:for="{{analysisResult.trainingPlan}}" wx:key="index" class="plan-item">
+        <text class="plan-title">{{item.day}} | {{item.focus}}</text>
+        <text wx:if="{{item.duration}}" class="plan-duration">{{item.duration}}</text>
+        <text wx:for="{{item.tasks}}" wx:key="subIndex" class="tip-item">- {{item}}</text>
+      </view>
+    </view>
+
+    <view class="tips">
+      <text class="tips-title">{{i18n.suggestions}}</text>
+      <text wx:for="{{analysisResult.tips}}" wx:key="index" class="tip-item">{{index + 1}}. {{item}}</text>
+    </view>
+  </view>
+</view>

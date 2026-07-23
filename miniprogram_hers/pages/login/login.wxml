@@ -1,0 +1,79 @@
+<view class="page">
+  <view class="illustration-panel">
+    <image class="illustration-image" src="../../images/login-skating-child.png" mode="aspectFill"></image>
+  </view>
+
+  <view class="brand">
+    <view class="logo-title">
+      <text class="logo-ai">AI</text><text class="logo-name">上轮滑</text>
+    </view>
+    <text class="logo-subtitle">快乐学习轮滑</text>
+  </view>
+
+  <view class="login-form">
+    <view class="form-group">
+      <input
+        placeholder="请输入手机号"
+        placeholder-class="input-placeholder"
+        type="number"
+        maxlength="11"
+        value="{{phone}}"
+        bindinput="bindPhoneInput"
+        class="input"
+      />
+    </view>
+
+    <view class="form-group">
+      <input
+        placeholder="请输入密码"
+        placeholder-class="input-placeholder"
+        password
+        value="{{password}}"
+        bindinput="bindPasswordInput"
+        class="input"
+      />
+    </view>
+
+    <view class="form-group" wx:if="{{isRegisterMode}}">
+      <input
+        placeholder="请确认密码"
+        placeholder-class="input-placeholder"
+        password
+        value="{{confirmPassword}}"
+        bindinput="bindConfirmPasswordInput"
+        class="input"
+      />
+    </view>
+
+    <button bindtap="{{isRegisterMode ? 'registerWithPassword' : 'loginWithPassword'}}"
+      class="login-btn" loading="{{submitting}}" disabled="{{submitting}}">
+      {{isRegisterMode ? '注册' : '登录'}}
+    </button>
+
+    <view class="row-links">
+      <text class="link" bindtap="toggleMode">{{isRegisterMode ? '已有账号？去登录' : '还没有账号？注册'}}</text>
+      <text wx:if="{{!isRegisterMode}}" class="link" bindtap="onForgotPasswordTap">忘记密码？</text>
+    </view>
+
+    <view class="wechat-section">
+      <view class="divider">
+        <view class="divider-line"></view>
+        <text class="divider-text">其他登录方式</text>
+        <view class="divider-line"></view>
+      </view>
+      <view class="wechat-circle" bindtap="loginWithWechat">
+        <image class="wechat-icon-img" src="../../images/wechat-login.png" mode="aspectFit"></image>
+      </view>
+      <view class="wechat-circle-tip">微信快捷登录</view>
+    </view>
+
+    <view class="agreement-row" bindtap="toggleAgreement">
+      <view class="agreement-check {{agreed ? 'checked' : ''}}">
+        <text wx:if="{{agreed}}" class="agreement-checkmark">✓</text>
+      </view>
+      <text class="agreement-text">
+        我已阅读并同意 <text class="agreement-link">《用户协议》</text>和<text class="agreement-link">《隐私政策》</text>
+      </text>
+    </view>
+  </view>
+</view>

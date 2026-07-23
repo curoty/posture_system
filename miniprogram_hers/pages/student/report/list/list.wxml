@@ -1,0 +1,59 @@
+<view class="page">
+  <view class="report-page">
+    <view class="hero-card">
+      <view class="hero-copy">
+        <text class="hero-eyebrow">训练报告</text>
+        <text class="hero-title">记录每一次进步</text>
+        <text class="hero-desc">查看教练发布的课程反馈和本次获得的小红花。</text>
+      </view>
+      <view class="hero-meta">
+        <view class="meta-chip">
+          <text class="meta-value">{{reports.length}}</text>
+          <text class="meta-label">已上课程</text>
+        </view>
+        <view class="meta-chip accent">
+          <text class="meta-value">{{totalFlowers}}</text>
+          <text class="meta-label">小红花</text>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{loading}}" class="state-card">
+      <text class="state-text">正在加载训练报告...</text>
+    </view>
+
+    <view wx:if="{{loadError}}" class="state-card error-card">
+      <text class="state-text error-text">{{loadError}}</text>
+    </view>
+
+    <view wx:if="{{!loading && !loadError && reports.length > 0}}" class="report-list">
+      <navigator wx:for="{{reports}}" wx:key="id" url="/pages/student/report/detail/detail?id={{item.id}}" class="report-card">
+        <view class="report-top">
+          <view>
+            <text class="report-date">{{item.createdDate}}</text>
+            <text class="report-tag">{{item.reportTag}}</text>
+          </view>
+          <view class="flower-pill">
+            <text class="flower-pill-label">小红花</text>
+            <text class="flower-pill-value">{{item.flowerText}}</text>
+          </view>
+        </view>
+
+        <view class="report-main">
+          <text class="report-title">{{item.title}}</text>
+          <text class="report-preview">{{item.contentPreview || '教练已发布训练反馈，点击查看详情。'}}</text>
+        </view>
+
+        <view class="report-bottom">
+          <text class="report-coach">教练：{{item.coachName}}</text>
+          <text class="report-status">{{item.statusText}}</text>
+        </view>
+      </navigator>
+    </view>
+
+    <view wx:if="{{!loading && !loadError && reports.length === 0}}" class="empty-card">
+      <text class="empty-title">暂时没有训练报告</text>
+      <text class="empty-desc">教练发布课程反馈后，会在这里显示。</text>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,38 @@
+<view class="page">
+  <view class="card">
+    <view class="title">腰部静止温漂采集</view>
+    <view class="hint">仅采集 waist 原始六轴、芯片温度与时间戳；不执行 Python 软件滤波。</view>
+  </view>
+
+  <view class="card">
+    <view class="label">采集类型</view>
+    <picker mode="selector" range="{{phaseOptions}}" range-key="label" value="{{phaseIndex}}" bindchange="onPhaseChange" disabled="{{running}}">
+      <view class="picker">{{phaseOptions[phaseIndex].label}}</view>
+    </picker>
+
+    <view class="label">组号</view>
+    <picker mode="selector" range="{{groupOptions}}" value="{{groupIndex}}" bindchange="onGroupChange" disabled="{{running}}">
+      <view class="picker">第 {{groupOptions[groupIndex]}} 组</view>
+    </picker>
+
+    <view class="status">状态：{{statusText}}</view>
+    <view class="status">进度：{{elapsedSeconds}} / {{targetSeconds}} 秒（{{progress}}%）</view>
+    <view class="status">{{running ? '已采集' : '已保存'}}：{{totalFrames}} 帧，{{totalChunks}} 个分块</view>
+    <view class="status">最近温度：{{latestTemperature}} °C</view>
+    <view class="status">capture_id：{{captureId || '-'}}</view>
+
+    <button class="primary" bindtap="startCapture" loading="{{running}}" disabled="{{running}}">开始采集</button>
+    <button class="danger" bindtap="stopCapture" disabled="{{!running}}">停止并保存</button>
+  </view>
+
+  <view class="card">
+    <view class="label">执行顺序</view>
+    <view class="hint">1. 先用“30秒链路测试”确认 MQTT、/frames、云函数和数据库。</view>
+    <view class="hint">2. 按实验要求选择1、3、5或10分钟采集时长和组号。</view>
+    <view class="hint">3. 冷启动实验应在上电前固定设备，上电后尽快开始采集。</view>
+    <view class="hint">4. 采集过程中设备必须保持静止，页面保持前台。</view>
+    <view class="hint">5. 数据保存至数据库 static_sample_nofiltering 集合。</view>
+  </view>
+
+  <view class="error" wx:if="{{errorText}}">{{errorText}}</view>
+</view>

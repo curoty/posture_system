@@ -1,0 +1,88 @@
+<view class="container">
+  <view class="card add-card">
+    <text class="title">手机号设置角色</text>
+    <text class="desc">管理员可添加用户并设置角色，初始密码默认 123456</text>
+
+    <input
+      class="input"
+      type="number"
+      maxlength="11"
+      placeholder="请输入手机号"
+      value="{{phone}}"
+      bindinput="onPhoneInput"
+    />
+
+    <picker mode="selector" range="{{roleOptions}}" range-key="label" value="{{roleIndex}}" bindchange="onRoleChange">
+      <view class="picker-row">
+        <text class="picker-label">目标角色</text>
+        <text class="picker-value">{{roleOptions[roleIndex].label}}</text>
+      </view>
+    </picker>
+
+    <picker
+      wx:if="{{roleOptions[roleIndex].value === 'coach'}}"
+      mode="selector"
+      range="{{coachLevelOptions}}"
+      range-key="label"
+      value="{{coachLevelIndex}}"
+      bindchange="onCoachLevelChange"
+    >
+      <view class="picker-row">
+        <text class="picker-label">教练等级</text>
+        <text class="picker-value">{{coachLevelOptions[coachLevelIndex].label}}</text>
+      </view>
+    </picker>
+
+    <button
+      class="submit-btn"
+      loading="{{submitting}}"
+      disabled="{{submitting}}"
+      bindtap="onSubmitRoleSetting"
+    >
+      保存角色设置
+    </button>
+
+    <text wx:if="{{submitMessage}}" class="submit-message">{{submitMessage}}</text>
+  </view>
+
+  <view class="card">
+    <text class="title">用户权限管理</text>
+    <text class="desc">只显示你管理范围内的教练，开启后可访问管理端功能</text>
+    <input
+      class="input"
+      placeholder="搜索姓名或手机号"
+      value="{{keyword}}"
+      bindinput="onKeywordInput"
+    />
+  </view>
+
+  <view wx:if="{{loadError}}" class="error-tip">{{loadError}}</view>
+
+  <view class="list-wrap">
+    <view wx:for="{{filteredUsers}}" wx:key="id" class="user-card">
+      <view class="user-main">
+        <view class="name-row">
+          <text class="user-name">{{item.name}}</text>
+          <text class="role-tag role-{{item.role}}">{{item.roleLabel}}</text>
+          <text wx:if="{{item.levelLabel}}" class="level-tag">{{item.levelLabel}}</text>
+        </view>
+        <text class="phone">{{item.phoneText}}</text>
+        <text class="hint" wx:if="{{item.isBuiltinAdmin}}">系统管理员，权限固定开启</text>
+        <text class="hint" wx:else>开启后可管理商城</text>
+      </view>
+      <switch
+        class="access-switch"
+        checked="{{item.adminAccess}}"
+        disabled="{{savingId === item.id || item.isBuiltinAdmin}}"
+        data-id="{{item.id}}"
+        data-role="{{item.role}}"
+        data-admin-access="{{item.adminAccess}}"
+        bindchange="onAdminSwitchChange"
+        color="#07c160"
+      />
+    </view>
+  </view>
+
+  <view wx:if="{{!loading && filteredUsers.length === 0 && !loadError}}" class="empty">暂无可管理教练</view>
+  <view wx:if="{{loading}}" class="loading">加载中...</view>
+</view>

@@ -16,7 +16,13 @@ import torch
 from fastapi import Body, FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
-from src.predict import load_action_model, predict_record, predict_jsonl_file, load_lgb_quality_model
+from src.predict import (
+    _resolve_action_labels,
+    load_action_model,
+    load_lgb_quality_model,
+    predict_jsonl_file,
+    predict_record,
+)
 from src.similarity_scoring import load_reference_library
 from src.coach_feedback import generate_coach_feedback
 
@@ -193,10 +199,28 @@ def startup() -> None:
 
 @app.get("/health")
 def health() -> Dict[str, Any]:
+    # Surface which backbone is actually serving traffic.  The two architectures
+    # expect different input widths (baseline 54-dim raw; structured 72-dim with
+    # acc_mag/gyro_mag), so an operator debugging a shape error needs to see the
+    # arch and sequence config without cracking open the checkpoint.
+    action_model: Dict[str, Any] = {"path": str(ACTION_MODEL_PATH)}
+    if active_service is not None:
+        checkpoint = active_service.checkpoint
+        sequence_config = checkpoint.get("sequence_config", {})
+        action_model.update({
+            "arch": checkpoint.get("arch", "baseline"),
+            "num_classes": checkpoint.get("model_config", {}).get("num_classes"),
+            "action_labels": _resolve_action_labels(checkpoint),
+            "input_dim": sequence_config.get("input_dim"),
+            "sequence_length": sequence_config.get("sequence_length"),
+            "derived_channels": sequence_config.get("derived_channels", []),
+        })
+
     return {
         "success": active_service is not None,
         "message": "Deep model service is running" if active_service is not None else startup_error,
         "action_model_path": str(ACTION_MODEL_PATH),
+        "action_model": action_model,
         "lgb_quality_model_path": str(LGB_QUALITY_MODEL_PATH) if LGB_QUALITY_MODEL_PATH.exists() else None,
         "quality_model_path": str(QUALITY_MODEL_PATH),
         "quality_model_type": "LightGBM" if (active_service and active_service.lgb_available) else "GaussianNB",

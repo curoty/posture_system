@@ -1,15 +1,55 @@
+# ── Environment & secrets ──
 .env
+.env.local
+.env.production
+
+# ── Python ──
+__pycache__/
+*.pyc
+*.pyo
 .venv/
 venv/
-*.pt
+
+# ── Node / Cloud Functions ──
+node_modules/
+
+# ── IDE ──
+.idea/
+.vscode/
+
+# ── AI agents workspace (生成的) ──
+.agents/
+.claude/
+
+# ── Database exports (大文件) ──
+*.jsonl
+database_export-*.json
+
+# ── Model weights (二进制大文件，从训练脚本重新生成) ──
 *.pth
+*.pkl
+# 注意: *.pt 不上传，action_model.pt 通过训练脚本重新生成或单独管理
+*.pt
+
+# ── Media / Data (大文件) ──
 *.mp4
 *.avi
 *.mov
-*.json
-*.jsonl
+*.wav
+*.mp3
 datasets/
 data/
-.idea/
+
+# ── Java ──
 target/
-node_modules/
+
+# ── macOS ──
+.DS_Store
+
+# ── Backup files ──
+*.bak
+*.bak_*
+
+# ── WeChat miniprogram project.private.config.json ──
+# 含个人开发者设置，不提交
+project.private.config.json

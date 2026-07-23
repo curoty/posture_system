@@ -1,0 +1,148 @@
+<view class="page">
+  <scroll-view class="page-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+    <view class="container">
+      <view class="hero-panel">
+        <view class="hero-top">
+          <view class="avatar-shell" bindtap="changeAvatar">
+            <image class="avatar" src="{{coachInfo.avatarUrl || '/images/default-student-avatar.png'}}" mode="aspectFill" />
+          </view>
+          <view class="hero-copy">
+            <text class="hero-name">{{coachInfo.name || '未设置'}}</text>
+            <view class="hero-tags">
+              <text class="hero-role">{{isAdmin ? '管理员' : '教练'}}</text>
+              <text wx:if="{{!isAdmin}}" class="hero-level">{{coachInfo.levelLabel || '中级教练'}}</text>
+            </view>
+            <text class="hero-org">{{coachInfo.organization || '所属机构待完善'}}</text>
+          </view>
+          <view class="hero-setting" bindtap="editProfile">
+            <image src="/images/icons/profile-setting-white.svg" mode="aspectFit" />
+          </view>
+        </view>
+      </view>
+
+      <view class="stats-card">
+        <view class="stats-grid">
+          <view class="stat-item">
+            <text class="stat-value">{{stats.studentCount || 0}}</text>
+            <text class="stat-label">学生数量</text>
+          </view>
+          <view class="stat-item">
+            <text class="stat-value">{{stats.courseCount || 0}}</text>
+            <text class="stat-label">已上课程</text>
+          </view>
+          <view class="stat-item">
+            <text class="stat-value">{{stats.publishedCourseCount || 0}}</text>
+            <text class="stat-label">发布课程</text>
+          </view>
+          <view class="stat-item">
+            <text class="stat-value">{{stats.reviewCount || 0}}</text>
+            <text class="stat-label">收到好评</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="info-card">
+        <view class="info-row">
+          <view class="info-left">
+            <image class="info-icon" src="/images/icons/profile-phone.svg" mode="aspectFit" />
+            <text class="info-label">手机号</text>
+          </view>
+          <text class="info-value">{{coachInfo.phone || '未设置'}}</text>
+        </view>
+        <view class="info-row">
+          <view class="info-left">
+            <image class="info-icon" src="/images/icons/profile-join.svg" mode="aspectFit" />
+            <text class="info-label">加入时间</text>
+          </view>
+          <text class="info-value">{{coachInfo.joinDate || '未设置'}}</text>
+        </view>
+        <view class="info-row" bindtap="editTeachYear">
+          <view class="info-left">
+            <image class="info-icon" src="/images/icons/profile-course.svg" mode="aspectFit" />
+            <text class="info-label">教学年限</text>
+          </view>
+          <view class="info-right">
+            <text class="info-value">{{coachInfo.teachingYearsText || '未设置'}}</text>
+            <image class="chevron" src="/images/icons/profile-chevron.svg" mode="aspectFit" />
+          </view>
+        </view>
+        <view class="info-row" bindtap="editOrganization">
+          <view class="info-left">
+            <image class="info-icon" src="/images/icons/profile-lock.svg" mode="aspectFit" />
+            <text class="info-label">所属机构</text>
+          </view>
+          <view class="info-right">
+            <text class="info-value">{{coachInfo.organization || '未设置'}}</text>
+            <image class="chevron" src="/images/icons/profile-chevron.svg" mode="aspectFit" />
+          </view>
+        </view>
+        <view class="info-row" bindtap="goCertification">
+          <view class="info-left">
+            <image class="info-icon" src="/images/icons/profile-course.svg" mode="aspectFit" />
+            <text class="info-label">教练认证</text>
+          </view>
+          <view class="info-right">
+            <text class="info-value">{{coachInfo.certificationText || '待认证'}}</text>
+            <image class="chevron" src="/images/icons/profile-chevron.svg" mode="aspectFit" />
+          </view>
+        </view>
+      </view>
+
+      <view class="action-card">
+        <view class="action-row" bindtap="changePassword">
+          <view class="info-left">
+            <image class="info-icon" src="/images/icons/profile-lock.svg" mode="aspectFit" />
+            <text class="info-label action-text">修改密码</text>
+          </view>
+          <image class="chevron" src="/images/icons/profile-chevron.svg" mode="aspectFit" />
+        </view>
+        <view class="action-row" bindtap="goForbiddenWords">
+          <view class="info-left">
+            <image class="info-icon" src="/images/icons/profile-lock.svg" mode="aspectFit" />
+            <text class="info-label action-text">违禁词管理</text>
+          </view>
+          <image class="chevron" src="/images/icons/profile-chevron.svg" mode="aspectFit" />
+        </view>
+        <view class="action-row logout-row" bindtap="logout">
+          <view class="info-left">
+            <image class="info-icon" src="/images/icons/profile-logout.svg" mode="aspectFit" />
+            <text class="info-label logout-text">退出登录</text>
+          </view>
+          <image class="chevron" src="/images/icons/profile-chevron.svg" mode="aspectFit" />
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+  <coach-tab-bar selected="profile" />
+</view>
+
+<view class="org-modal-mask" wx:if="{{showOrgModal}}" bindtap="closeOrgModal">
+  <view class="org-modal" catchtap="">
+    <view class="org-modal-header">
+      <text class="org-modal-title">选择所属机构</text>
+      <view class="org-modal-close" bindtap="closeOrgModal">
+        <text class="close-text">×</text>
+      </view>
+    </view>
+    <scroll-view class="org-modal-body" scroll-y enhanced show-scrollbar="{{false}}">
+      <view
+        wx:for="{{organizationList}}"
+        wx:key="_id"
+        class="org-item {{selectedOrgIds.includes(item._id) ? 'selected' : ''}}"
+        bindtap="toggleOrgSelect"
+        data-id="{{item._id}}"
+      >
+        <view class="org-item-check">
+          <view class="check-circle {{selectedOrgIds.includes(item._id) ? 'checked' : ''}}">
+            <text wx:if="{{selectedOrgIds.includes(item._id)}}" class="check-mark">✓</text>
+          </view>
+        </view>
+        <text class="org-item-name">{{item.name}}</text>
+      </view>
+    </scroll-view>
+    <view class="org-modal-footer">
+      <button class="org-modal-btn cancel" bindtap="closeOrgModal">取消</button>
+      <button class="org-modal-btn confirm" bindtap="confirmOrgSelect">确认</button>
+    </view>
+  </view>
+</view>

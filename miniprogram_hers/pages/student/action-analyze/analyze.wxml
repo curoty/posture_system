@@ -1,0 +1,87 @@
+﻿<view class="page">
+  <view class="header">
+    <text class="header-title">动作分析</text>
+    <text class="header-sub">连接主板 WiFi，自动采集并完成 AI 动作分析</text>
+  </view>
+
+  <view class="status-bar">
+    <view class="status-item">
+      <text class="label">设备:</text>
+      <text class="value status-{{connectionStatus}}">
+        {{connectionStatus === 'disconnected' ? '未连接' : connectionStatus === 'connecting' ? '连接中...' : '已连接'}}
+      </text>
+    </view>
+    <view class="status-item" wx:if="{{deviceName}}">
+      <text class="label">名称:</text>
+      <text class="value">{{deviceName}}</text>
+    </view>
+    <view class="status-item" wx:if="{{isCollecting}}">
+      <text class="label">帧数:</text>
+      <text class="value frame-count">{{collectedFrames}}</text>
+    </view>
+  </view>
+
+  <view class="btn-group">
+    <button class="btn connect-btn {{connectionStatus === 'connected' ? 'secondary' : 'primary'}}" bindtap="onTapConnect" loading="{{connectionStatus === 'connecting'}}">
+      {{connectionStatus === 'connected' ? '重新连接 WiFi' : '连接主板 WiFi'}}
+    </button>
+
+    <button class="btn collect-btn {{isCollecting ? 'danger' : (connectionStatus === 'connected' ? 'success' : 'disabled-success')}}" bindtap="onTapToggleCollect" disabled="{{connectionStatus !== 'connected' || analyzing}}">
+      {{isCollecting ? '停止采集' : '开始采集'}}
+    </button>
+
+    <button class="btn release-btn {{connectionStatus === 'connected' ? 'warn' : 'disabled-warn'}}" bindtap="onTapRelease" disabled="{{connectionStatus !== 'connected'}}">
+      断开设备
+    </button>
+  </view>
+
+  <view class="status-box" wx:if="{{analyzing}}">
+    <view class="status-ring analyzing"></view>
+    <text class="status-text">AI 正在分析...</text>
+  </view>
+
+  <view class="result-section" wx:if="{{resultVisible}}">
+    <view class="result-card score-card">
+      <view class="score-circle {{scoreColor}}">
+        <text class="score-number">{{score}}</text>
+        <text class="score-label">综合评分</text>
+      </view>
+      <view class="score-meta">
+        <view class="quality-badge {{qualityClass}}">
+          <text>{{quality}}</text>
+        </view>
+        <text class="confidence-text">置信度 {{confidence}}%</text>
+      </view>
+    </view>
+
+    <view class="result-card comment-card">
+      <view class="comment-head">
+        <text class="comment-title">AI 评语</text>
+        <view class="voice-btn {{voicePlaying ? 'playing' : ''}}" bindtap="onToggleVoice">
+          <text>{{voicePlaying ? '暂停' : '播报'}}</text>
+        </view>
+      </view>
+      <text class="comment-text">{{comment}}</text>
+    </view>
+
+    <view class="save-row">
+      <button class="save-btn" bindtap="onTapSave" loading="{{saving}}" disabled="{{saving}}">
+        {{saving ? '保存中...' : '保存分析'}}
+      </button>
+      <button class="reset-btn" bindtap="onTapReset">再来一次</button>
+    </view>
+  </view>
+
+  <view class="logs-container" wx:if="{{logs.length > 0}}">
+    <view class="logs-title">日志</view>
+    <scroll-view class="logs-content" scroll-y="{{true}}" scroll-into-view="log-{{logs.length - 1}}">
+      <view wx:for="{{logs}}" wx:key="index" id="log-{{index}}" class="log-item">
+        {{item}}
+      </view>
+    </scroll-view>
+  </view>
+
+  <view class="error-tip" wx:if="{{errorMsg}}">
+    <text>{{errorMsg}}</text>
+  </view>
+</view>

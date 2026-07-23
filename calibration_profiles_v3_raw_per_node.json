@@ -1,0 +1,164 @@
+{
+  "schema_version": 2,
+  "profile_kind": "bench_raw_before_any_offset",
+  "source_report": "static_samples\\V3\\4nodes_cold_start\\calibration_analysis_v3_4nodes.json",
+  "raw_data_modified": false,
+  "nodes": {
+    "left_foot": {
+      "node_id": "left_foot",
+      "sample_rate_hz": 50.0,
+      "calibration_mode": "uncalibrated_raw",
+      "reference_temperature_c": null,
+      "acc_bias": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "gyro_bias": [
+        1.240932,
+        0.725099,
+        0.319416
+      ],
+      "acc_temperature_slope": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "gyro_temperature_slope": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "temperature_compensation_enabled": false,
+      "metadata": {
+        "bias_kind": "bench_raw_gyro_mean",
+        "source_report": "static_samples\\V3\\4nodes_cold_start\\calibration_analysis_v3_4nodes.json",
+        "included_files": [
+          "database_export-cloud1-1g0419td698cd252-static_sample_nofiltering1.json",
+          "database_export-cloud1-1g0419td698cd252-static_sample_nofiltering2.json",
+          "database_export-cloud1-1g0419td698cd252-static_sample_nofiltering3.json"
+        ],
+        "included_round_count": 3,
+        "excluded_suspect_rounds": true,
+        "temperature_compensation_reason": "disabled_until_valid_dynamic_temperature_profile"
+      }
+    },
+    "left_knee": {
+      "node_id": "left_knee",
+      "sample_rate_hz": 50.0,
+      "calibration_mode": "uncalibrated_raw",
+      "reference_temperature_c": null,
+      "acc_bias": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "gyro_bias": [
+        -0.977723,
+        -0.023086,
+        0.196245
+      ],
+      "acc_temperature_slope": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "gyro_temperature_slope": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "temperature_compensation_enabled": false,
+      "metadata": {
+        "bias_kind": "bench_raw_gyro_mean",
+        "source_report": "static_samples\\V3\\4nodes_cold_start\\calibration_analysis_v3_4nodes.json",
+        "included_files": [
+          "database_export-cloud1-1g0419td698cd252-static_sample_nofiltering1.json",
+          "database_export-cloud1-1g0419td698cd252-static_sample_nofiltering2.json",
+          "database_export-cloud1-1g0419td698cd252-static_sample_nofiltering3.json"
+        ],
+        "included_round_count": 3,
+        "excluded_suspect_rounds": true,
+        "temperature_compensation_reason": "disabled_until_valid_dynamic_temperature_profile"
+      }
+    },
+    "right_foot": {
+      "node_id": "right_foot",
+      "sample_rate_hz": 50.0,
+      "calibration_mode": "uncalibrated_raw",
+      "reference_temperature_c": null,
+      "acc_bias": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "gyro_bias": [
+        1.087782,
+        0.026584,
+        -0.573907
+      ],
+      "acc_temperature_slope": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "gyro_temperature_slope": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "temperature_compensation_enabled": false,
+      "metadata": {
+        "bias_kind": "bench_raw_gyro_mean",
+        "source_report": "static_samples\\V3\\4nodes_cold_start\\calibration_analysis_v3_4nodes.json",
+        "included_files": [
+          "database_export-cloud1-1g0419td698cd252-static_sample_nofiltering1.json",
+          "database_export-cloud1-1g0419td698cd252-static_sample_nofiltering2.json",
+          "database_export-cloud1-1g0419td698cd252-static_sample_nofiltering3.json"
+        ],
+        "included_round_count": 3,
+        "excluded_suspect_rounds": true,
+        "temperature_compensation_reason": "disabled_until_valid_dynamic_temperature_profile"
+      }
+    },
+    "right_knee": {
+      "node_id": "right_knee",
+      "sample_rate_hz": 50.0,
+      "calibration_mode": "uncalibrated_raw",
+      "reference_temperature_c": null,
+      "acc_bias": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "gyro_bias": [
+        -0.56432,
+        -0.327964,
+        -0.342689
+      ],
+      "acc_temperature_slope": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "gyro_temperature_slope": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "temperature_compensation_enabled": false,
+      "metadata": {
+        "bias_kind": "bench_raw_gyro_mean",
+        "source_report": "static_samples\\V3\\4nodes_cold_start\\calibration_analysis_v3_4nodes.json",
+        "included_files": [
+          "database_export-cloud1-1g0419td698cd252-static_sample_nofiltering1.json",
+          "database_export-cloud1-1g0419td698cd252-static_sample_nofiltering2.json",
+          "database_export-cloud1-1g0419td698cd252-static_sample_nofiltering3.json"
+        ],
+        "included_round_count": 3,
+        "excluded_suspect_rounds": true,
+        "temperature_compensation_reason": "disabled_until_valid_dynamic_temperature_profile"
+      }
+    }
+  }
+}

@@ -1,0 +1,124 @@
+<view class="container">
+  <view class="header-section">
+    <input placeholder="{{i18n.searchPlaceholder}}" bindinput="bindSearchInput" class="search-input" />
+    <button bindtap="addStudent" class="add-btn">+ 添加学生</button>
+  </view>
+
+  <view wx:if="{{loading}}" class="empty-state">
+    <text class="empty-text">{{i18n.loadingStudents}}</text>
+  </view>
+
+  <view wx:elif="{{loadError}}" class="empty-state">
+    <text class="empty-text">{{loadError}}</text>
+  </view>
+
+  <view wx:elif="{{originalStudents.length > 0}}" class="content-area">
+    <view class="stats-row">
+      <view class="stat-card stat-total">
+        <text class="stat-num">{{stats.total}}</text>
+        <text class="stat-label">{{i18n.statTotal}}</text>
+      </view>
+      <view class="stat-card stat-assigned">
+        <text class="stat-num">{{stats.assigned}}</text>
+        <text class="stat-label">{{i18n.statAssigned}}</text>
+      </view>
+      <view class="stat-card stat-unassigned">
+        <text class="stat-num">{{stats.unassigned}}</text>
+        <text class="stat-label">{{i18n.statUnassigned}}</text>
+      </view>
+    </view>
+
+    <view class="tab-bar">
+      <view class="tab-item {{activeTab === 'all' ? 'tab-active' : ''}}" data-tab="all" bindtap="onTabChange">
+        <text>{{i18n.tabAll}}</text>
+      </view>
+      <view class="tab-item {{activeTab === 'assigned' ? 'tab-active' : ''}}" data-tab="assigned" bindtap="onTabChange">
+        <text>{{i18n.tabAssigned}}</text>
+      </view>
+      <view class="tab-item {{activeTab === 'unassigned' ? 'tab-active' : ''}}" data-tab="unassigned" bindtap="onTabChange">
+        <text>{{i18n.tabUnassigned}}</text>
+      </view>
+    </view>
+
+    <view wx:if="{{displayStudents.length > 0}}" class="student-list">
+      <view wx:for="{{displayStudents}}" wx:key="id" class="student-card">
+        <view class="card-header">
+          <view class="card-avatar">
+            <image src="{{item.avatarUrl || '../../../../images/icons/customer-service.svg'}}" mode="aspectFill"></image>
+          </view>
+          <view class="card-header-info">
+            <view class="card-name-row">
+              <text class="card-name">{{item.name}}</text>
+              <text wx:if="{{item.isAssigned}}" class="tag tag-class">{{item.className}}</text>
+              <text wx:else class="tag tag-unassigned">{{i18n.tagUnassigned}}</text>
+            </view>
+            <text class="card-phone">{{item.phone}}</text>
+          </view>
+        </view>
+
+        <view class="card-body">
+          <view class="card-lesson-row">
+            <text class="lesson-text {{item.lessonConfigured ? '' : 'lesson-none'}}">{{item.lessonSummary}}</text>
+          </view>
+
+          <view wx:if="{{item.isAssigned}}" class="card-meta-row">
+            <text class="meta-label">入班时间:</text>
+            <text class="meta-value">{{item.joinDate || '--'}}</text>
+          </view>
+        </view>
+
+        <view class="card-actions">
+          <button
+            class="action-btn btn-set-lesson"
+            data-id="{{item.id}}"
+            data-name="{{item.name}}"
+            data-total="{{item.lessonTotal}}"
+            data-remaining="{{item.lessonRemaining}}"
+            bindtap="onSetLessonQuota"
+          >{{i18n.btnSetLesson}}</button>
+
+          <block wx:if="{{item.isAssigned}}">
+            <button
+              class="action-btn btn-exit-class"
+              data-id="{{item.id}}"
+              data-name="{{item.name}}"
+              bindtap="onRemoveStudent"
+            >{{i18n.btnExitClass}}</button>
+            <button
+              class="action-btn btn-transfer"
+              data-id="{{item.id}}"
+              data-name="{{item.name}}"
+              bindtap="onTransferAdmin"
+            >{{i18n.btnTransferAdmin}}</button>
+          </block>
+
+          <block wx:else>
+            <button
+              class="action-btn btn-assign-class"
+              data-id="{{item.id}}"
+              data-name="{{item.name}}"
+              bindtap="onAssignClass"
+            >{{i18n.btnAssignClass}}</button>
+            <button
+              class="action-btn btn-delete"
+              data-id="{{item.id}}"
+              data-name="{{item.name}}"
+              bindtap="onDeleteStudent"
+            >{{i18n.btnDelete}}</button>
+          </block>
+        </view>
+      </view>
+    </view>
+
+    <view wx:else class="empty-state">
+      <text class="empty-icon">{{i18n.emptyIcon}}</text>
+      <text class="empty-text">暂无匹配的学生</text>
+    </view>
+  </view>
+
+  <view wx:else class="empty-state">
+    <text class="empty-icon">{{i18n.emptyIcon}}</text>
+    <text class="empty-text">{{i18n.emptyNoStudent}}</text>
+    <text class="empty-tip">{{i18n.emptyTip}}</text>
+  </view>
+</view>

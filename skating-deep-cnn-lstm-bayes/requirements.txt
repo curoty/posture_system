@@ -7,3 +7,9 @@ tqdm>=4.62.0
 fastapi>=0.100.0
 uvicorn>=0.23.0
 lightgbm>=4.0.0
+
+# Sensor bridge (MQTT)
+paho-mqtt>=1.6,<3.0
+
+# Signal processing (denoise)
+scipy>=1.10,<2.0

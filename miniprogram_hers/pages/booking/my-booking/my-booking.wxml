@@ -1,0 +1,56 @@
+<view class="page">
+  <view class="container">
+    <view class="header">
+      <text class="header-eyebrow">我的预约</text>
+      <text class="header-title">{{isCoach ? '授课记录' : '我的预约课程'}}</text>
+      <text class="header-desc">{{isCoach ? '查看学员预约你课程的记录' : '查看已预约课程和当前上课状态'}}</text>
+    </view>
+
+    <view wx:if="{{loading && !hasLoaded}}" class="state-card">
+      <text class="state-text">正在加载预约记录...</text>
+    </view>
+
+    <view wx:if="{{loadError}}" class="state-card error-card">
+      <text class="state-text error-text">{{loadError}}</text>
+      <button class="retry-btn" bindtap="loadBookings" loading="{{loading}}" disabled="{{loading}}">重新加载</button>
+    </view>
+
+    <view wx:if="{{!loading && !loadError && bookings.length === 0}}" class="state-card">
+      <text class="empty-title">{{isCoach ? '暂无授课记录' : '还没有预约课程'}}</text>
+      <text class="empty-desc">{{isCoach ? '学员预约你的课程后，记录会显示在这里。' : '前往可预约课表选择课程吧。'}}</text>
+    </view>
+
+    <view wx:if="{{!loadError && bookings.length > 0}}" class="section-card">
+      <view class="booking-list">
+        <view wx:for="{{bookings}}" wx:key="id" class="booking-card">
+          <view class="booking-top">
+            <view class="date-badge">
+              <text class="date-badge-day">{{item.monthDay}}</text>
+              <text class="date-badge-week">{{item.weekday}}</text>
+            </view>
+            <view class="booking-content">
+              <view class="booking-row">
+                <text class="booking-title">{{item.title}}</text>
+                <text class="booking-status status-{{item.statusClass}}">{{item.statusText}}</text>
+              </view>
+              <text class="booking-time">{{item.timeRange}}</text>
+              <text class="booking-meta" wx:if="{{isCoach}}">学员：{{item.studentName}}</text>
+              <text class="booking-meta" wx:else>教练：{{item.coachName}}</text>
+              <text class="booking-meta">上课日期：{{item.fullDate}}</text>
+            </view>
+          </view>
+          <button
+            wx:if="{{item.canCancel}}"
+            class="cancel-btn"
+            data-id="{{item.id}}"
+            bindtap="onCancelBooking"
+            loading="{{cancelBookingId === item.id}}"
+            disabled="{{cancelBookingId === item.id}}"
+          >
+            取消预约
+          </button>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

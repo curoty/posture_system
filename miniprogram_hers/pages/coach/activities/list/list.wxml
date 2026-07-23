@@ -1,0 +1,98 @@
+<view class="mall-page">
+  <view class="search-row">
+    <view class="search-box">
+      <text class="search-icon">🔍</text>
+      <input
+        class="search-input"
+        placeholder="{{i18n.searchPlaceholder}}"
+        placeholder-class="search-placeholder"
+        bindinput="bindSearchInput"
+        confirm-type="search"
+        bindconfirm="bindSearchConfirm"
+      />
+    </view>
+    <view class="search-btn" bindtap="doSearch">搜索</view>
+  </view>
+
+  <view wx:if="{{loadError}}" class="error-tip">{{loadError}}</view>
+
+  <view class="promo-banner">
+    <image class="promo-bg" src="../../images/mall-banner-bg.png" mode="aspectFill"></image>
+    <view class="promo-mask"></view>
+    <view class="promo-copy">
+      <text class="promo-title">专业装备</text>
+      <text class="promo-subtitle">助力成长</text>
+      <view wx:if="{{isSeller}}" class="promo-btn" bindtap="goPublish">+ 发布新品</view>
+    </view>
+    <image class="promo-kid" src="../../images/mall-banner-kid.png" mode="aspectFit"></image>
+  </view>
+
+  <view class="category-grid">
+    <view
+      wx:for="{{categoryOptions}}"
+      wx:key="key"
+      class="category-item {{activeCategory === item.key ? 'active' : ''}}"
+      data-category="{{item.key}}"
+      bindtap="bindCategoryTap"
+    >
+      <image class="category-icon" src="{{item.icon}}" mode="aspectFit"></image>
+      <text class="category-label">{{item.label}}</text>
+    </view>
+  </view>
+
+  <view class="section-header">
+    <text class="section-title">{{activeCategoryLabel || '全部商品'}}<text class="section-count">{{total}}</text></text>
+    <view class="section-tools">
+      <text wx:if="{{activeCategory}}" class="section-more" bindtap="clearCategoryFilter">查看全部 ></text>
+      <picker bindchange="bindStatusChange" range="{{statusOptions}}" value="{{statusIndex}}">
+        <view class="filter-picker">{{statusOptions[statusIndex]}} ▾</view>
+      </picker>
+    </view>
+  </view>
+
+  <view class="goods-grid">
+    <view wx:for="{{filteredActivities}}" wx:key="id" class="goods-card" bindtap="goDetail" data-id="{{item.id}}">
+      <view class="goods-image-wrap">
+        <image
+          class="goods-image"
+          src="{{item.displayImageUrl}}"
+          mode="aspectFit"
+          data-id="{{item.id}}"
+          binderror="handleActivityImageError"
+        ></image>
+        <text class="goods-status status-{{item.statusKey}}">{{item.statusText}}</text>
+      </view>
+      <view class="goods-body">
+        <text class="goods-title">{{item.title}}</text>
+        <view class="goods-body-bottom">
+          <text class="goods-price">{{item.priceText}}</text>
+          <view class="goods-actions">
+            <view
+              wx:if="{{isSeller}}"
+              class="goods-edit"
+              catchtap="goEdit"
+              data-id="{{item.id}}"
+            >编辑</view>
+            <view
+              wx:if="{{isSeller}}"
+              class="goods-delete {{deletingId === item.id ? 'deleting' : ''}}"
+              catchtap="confirmDeleteActivity"
+              data-id="{{item.id}}"
+              data-image-ref="{{item.rawImageRef}}"
+            >{{deletingId === item.id ? i18n.deleting : i18n.deleteButton}}</view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{!loading && filteredActivities.length === 0 && !loadError}}" class="empty-state">
+    <text class="empty-text">{{i18n.emptyText}}</text>
+    <text class="empty-tip">{{i18n.emptyTip}}</text>
+  </view>
+
+  <view wx:if="{{loading}}" class="loading-tip">{{i18n.loadingText}}</view>
+  <view wx:if="{{!loading && !hasMore && filteredActivities.length > 0}}" class="loading-tip">{{i18n.noMoreText}}</view>
+</view>
+
+<coach-tab-bar selected="mall" />

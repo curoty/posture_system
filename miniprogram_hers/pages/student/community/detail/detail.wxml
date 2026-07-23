@@ -1,0 +1,151 @@
+<view class="detail-page">
+  <view class="post-shell">
+    <view class="post-card">
+      <view class="post-header">
+        <view class="post-author">
+          <image class="author-avatar" src="{{post.author.avatarUrl || '/images/default-student-avatar.png'}}" mode="aspectFill"></image>
+          <view class="author-copy">
+            <view class="author-row">
+              <text class="author-name">{{post.author.name}}</text>
+              <text class="author-role">{{post.authorRoleText || '学员'}}</text>
+            </view>
+            <text class="post-time">{{post.time}}</text>
+          </view>
+        </view>
+      </view>
+
+      <text wx:if="{{post.content}}" class="post-content">{{post.content}}</text>
+
+      <view wx:if="{{post.video && post.video.src}}" class="video-card">
+        <video
+          id="postVideoPlayer"
+          class="post-video"
+          src="{{post.video.src}}"
+          controls
+          objectFit="cover"
+          show-fullscreen-btn="{{true}}"
+          show-play-btn="{{true}}"
+          show-center-play-btn="{{false}}"
+          enable-play-gesture="{{true}}"
+          vslide-gesture="{{true}}"
+          vslide-gesture-in-fullscreen="{{true}}"
+          binderror="handlePostVideoError"
+        ></video>
+      </view>
+
+      <view wx:if="{{post.images && post.images.length > 0}}" class="post-image-grid">
+        <view wx:for="{{post.images}}" wx:key="*this" class="post-image-item">
+          <image
+            class="post-image"
+            src="{{item}}"
+            mode="aspectFill"
+            data-index="{{index}}"
+            binderror="handlePostImageError"
+            bindtap="previewPostImage"
+          ></image>
+        </view>
+      </view>
+
+      <view class="post-stats">
+        <view class="stat-chip {{isLiked ? 'is-liked' : ''}}" bindtap="togglePostLike">
+          <image class="stat-icon" src="../../../../images/icons/community-heart.svg" mode="aspectFit"></image>
+          <text class="stat-text">{{post.likes || 0}}</text>
+        </view>
+        <view class="stat-chip">
+          <image class="stat-icon" src="../../../../images/icons/community-comment.svg" mode="aspectFit"></image>
+          <text class="stat-text">{{post.comments || comments.length || 0}}</text>
+        </view>
+        <view class="stat-chip">
+          <text class="stat-eye">阅</text>
+          <text class="stat-text">{{post.views || 0}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="comment-shell">
+    <view class="comment-head">
+      <text class="comment-title">评论区</text>
+      <text class="comment-count">{{post.comments || comments.length || 0}} 条评论</text>
+    </view>
+
+    <view wx:if="{{comments.length > 0}}" class="comment-list">
+      <view wx:for="{{comments}}" wx:key="id" wx:for-item="comment" wx:for-index="cIndex" class="comment-item">
+        <view class="comment-body">
+          <image class="comment-avatar" src="/images/default-student-avatar.png" mode="aspectFill"></image>
+          <view class="comment-main">
+            <view class="comment-top">
+              <text class="comment-author">{{comment.author}}</text>
+              <text class="comment-time">{{comment.time}}</text>
+            </view>
+            <text wx:if="{{comment.content}}" class="comment-content">{{comment.content}}</text>
+
+            <view wx:if="{{comment.images && comment.images.length > 0}}" class="comment-image-grid">
+              <view wx:for="{{comment.images}}" wx:key="*this" wx:for-item="img" wx:for-index="imgIndex" class="comment-image-item">
+                <image
+                  class="comment-image"
+                  src="{{img}}"
+                  mode="aspectFill"
+                  data-comment-index="{{cIndex}}"
+                  data-image-index="{{imgIndex}}"
+                  binderror="handleCommentImageError"
+                  bindtap="previewCommentImage"
+                ></image>
+              </view>
+            </view>
+
+            <text class="reply-action" data-comment-id="{{comment.id}}" data-author="{{comment.author}}" bindtap="beginReply">回复</text>
+
+            <view wx:if="{{comment.replies && comment.replies.length > 0}}" class="reply-list">
+              <view wx:for="{{comment.displayReplies || comment.replies}}" wx:key="id" wx:for-item="reply" wx:for-index="rIndex" class="reply-item">
+                <view class="reply-top">
+                  <text class="reply-author">{{reply.author}}</text>
+                  <text class="reply-time">{{reply.time}}</text>
+                </view>
+                <text wx:if="{{reply.content}}" class="reply-content">回复 {{reply.replyToName}}：{{reply.content}}</text>
+              </view>
+              <text
+                wx:if="{{comment.canExpandReplies}}"
+                class="reply-expand-action"
+                data-comment-id="{{comment.id}}"
+                bindtap="toggleReplyExpand"
+              >{{comment.isRepliesExpanded ? '收起回复' : ('展开回复（' + comment.hiddenReplyCount + '）')}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:else class="empty-state">
+      <image class="empty-icon" src="../../../../images/icons/community-comment.svg" mode="aspectFit"></image>
+      <text class="empty-text">还没有评论</text>
+      <text class="empty-tip">快来发表你的看法吧</text>
+    </view>
+  </view>
+
+  <view class="comment-input-bar">
+    <view wx:if="{{replyingCommentId}}" class="replying-tip">
+      <text class="replying-text">正在回复 {{replyingToName}}</text>
+      <text class="replying-cancel" bindtap="cancelReply">取消</text>
+    </view>
+    <view class="comment-input-row">
+      <view class="comment-input-shell">
+        <input
+          class="comment-input"
+          placeholder="{{replyingCommentId ? ('回复 ' + replyingToName + '...') : '写评论...'}}"
+          value="{{commentText}}"
+          maxlength="200"
+          confirm-type="send"
+          bindinput="bindCommentInput"
+          bindconfirm="submitComment"
+        />
+      </view>
+      <button
+        class="comment-btn {{canSubmitComment ? 'active' : ''}}"
+        bindtap="submitComment"
+        loading="{{submittingComment}}"
+        disabled="{{submittingComment || !canSubmitComment}}"
+      >发送</button>
+    </view>
+  </view>
+</view>

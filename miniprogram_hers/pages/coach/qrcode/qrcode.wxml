@@ -1,0 +1,26 @@
+<view class="page">
+  <view class="card">
+    <view class="title">教练专属入口</view>
+    <view class="desc">学员可扫码或输入 6 位班级码，快速加入当前教练名下</view>
+
+    <view wx:if="{{loading}}" class="loading-box">
+      <view class="loading-spinner"></view>
+      <text>正在生成小程序码...</text>
+    </view>
+
+    <block wx:elif="{{qrBase64}}">
+      <image class="qr-image" src="data:image/png;base64,{{qrBase64}}" mode="aspectFit" show-menu-by-longpress="{{true}}" />
+      <view wx:if="{{inviteCode}}" class="invite-code-box">
+        <text class="invite-code-label">6位班级码</text>
+        <text class="invite-code-value">{{inviteCode}}</text>
+        <button class="btn secondary" bindtap="onTapCopyCode">复制6位码</button>
+      </view>
+      <button class="btn primary" bindtap="onTapSaveQR">保存到相册</button>
+    </block>
+
+    <block wx:elif="{{errorMsg}}">
+      <view class="error">{{errorMsg}}</view>
+      <button class="btn secondary" bindtap="onRetry">重新生成</button>
+    </block>
+  </view>
+</view>

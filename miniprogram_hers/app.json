@@ -1,0 +1,104 @@
+{
+  "pages": [
+    "pages/login/login",
+    "pages/notification/list/list",
+    "pages/notification/detail/detail",
+    "pages/init-db/init-db",
+    "pages/student/index/index",
+    "pages/student/profile/profile",
+    "pages/student/ai/analyze/analyze",
+    "pages/student/action-analyze/analyze",
+    "pages/student/schedule/list/list",
+    "pages/student/training/plans/plans",
+    "pages/student/community/list/list",
+    "pages/student/community/publish/publish",
+    "pages/student/community/detail/detail",
+    "pages/student/payment/list/list",
+    "pages/student/payment/detail/detail",
+    "pages/student/report/list/list",
+    "pages/student/report/detail/detail",
+    "pages/coach/index/index",
+    "pages/coach/sensor/debug/debug",
+    "pages/coach/sensor/static-capture/static-capture",
+    "pages/coach/sensor/static-capture-four-nodes/static-capture-four-nodes",
+    "pages/coach/sensor/display/display",
+    "pages/coach/sensor/samples/list/list",
+    "pages/coach/qrcode/qrcode",
+    "pages/coach/inference-test/inference-test",
+    "pages/coach/inference/history/history",
+    "pages/coach/predict-result/result",
+    "pages/coach/activities/list/list",
+    "pages/coach/activities/publish/publish",
+    "pages/coach/activities/detail/detail",
+    "pages/coach/students/list/list",
+    "pages/coach/training/add/add",
+    "pages/coach/schedule/manage/manage",
+    "pages/coach/students/stats/stats",
+    "pages/coach/community/manage/manage",
+    "pages/coach/community/publish/publish",
+    "pages/coach/payment/orders/orders",
+    "pages/coach/report/list/list",
+    "pages/coach/report/detail/detail",
+    "pages/coach/permission/manage/manage",
+    "pages/coach/profile/profile",
+    "pages/coach/settings/forbidden-words/forbidden-words",
+    "pages/coach/certification/certification",
+    "pages/coach/invitation/invitation",
+    "pages/admin/review/review",
+    "pages/student/join-class/join-class",
+    "pages/booking/my-booking/my-booking",
+    "pages/admin/users/index/index",
+    "pages/coach/classes/index/index",
+    "pages/coach/classes/detail/detail",
+    "pages/coach/classes/create/create"
+  ],
+  "window": {
+    "backgroundColor": "#F6F6F6",
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#F6F6F6",
+    "navigationBarTitleText": "AI上轮滑",
+    "navigationBarTextStyle": "black"
+  },
+  "plugins": {
+    "WechatSI": {
+      "version": "0.3.6",
+      "provider": "wx069ba97219f66d99"
+    }
+  },
+  "sitemapLocation": "sitemap.json",
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents",
+  "tabBar": {
+    "custom": true,
+    "color": "#666",
+    "selectedColor": "#35C66B",
+    "backgroundColor": "#fff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/student/index/index",
+        "text": "首页",
+        "iconPath": "images/icons/home.png",
+        "selectedIconPath": "images/icons/home-active.png"
+      },
+      {
+        "pagePath": "pages/student/community/list/list",
+        "text": "社区",
+        "iconPath": "images/icons/examples.png",
+        "selectedIconPath": "images/icons/examples-active.png"
+      },
+      {
+        "pagePath": "pages/student/payment/list/list",
+        "text": "商城",
+        "iconPath": "images/icons/goods.png",
+        "selectedIconPath": "images/icons/goods-active.png"
+      },
+      {
+        "pagePath": "pages/student/profile/profile",
+        "text": "我的",
+        "iconPath": "images/icons/usercenter.png",
+        "selectedIconPath": "images/icons/usercenter-active.png"
+      }
+    ]
+  }
+}

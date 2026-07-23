@@ -1,0 +1,94 @@
+<view class="page">
+  <view class="home-header">
+    <view class="header-copy">
+      <text class="hello-text">你好，{{userName}}</text>
+      <view class="brand-title">
+        <text class="brand-ai">AI</text><text class="brand-name"> 上轮滑</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="training-banner">
+    <image class="banner-bg" src="../../../images/home-training-bg.png" mode="aspectFill"></image>
+    <view class="banner-shade"></view>
+    <view class="banner-copy">
+      <text class="banner-title">坚持训练</text>
+      <text class="banner-subtitle">让我们一起进步吧！</text>
+      <view class="banner-link" bindtap="goToScheduleList">开始训练 ></view>
+    </view>
+    <image class="banner-child" src="../../../images/home-training-child.png" mode="aspectFit"></image>
+  </view>
+
+  <view class="stats-grid">
+    <navigator url="/pages/student/report/list/list" class="stat-card report-card">
+      <view class="stat-card-head">
+        <text class="stat-title">训练报告</text>
+        <image class="stat-icon" src="../../../images/icons/student-report.png" mode="aspectFit"></image>
+      </view>
+      <view class="stat-lines">
+        <text class="stat-line">本周训练：{{weeklyTrainingCount || 0}} 次</text>
+        <text class="stat-line">训练时长：{{weeklyTrainingMinutes || 0}} 分钟</text>
+      </view>
+      <text class="stat-action">查看详情 ></text>
+    </navigator>
+
+    <view class="stat-card notification-card" bindtap="goToNotificationList">
+      <view class="stat-card-head">
+        <text class="stat-title">消息通知</text>
+        <view class="stat-icon-wrap">
+          <image class="stat-icon" src="../../../images/icons/student-notification.png" mode="aspectFit"></image>
+          <text wx:if="{{unreadNotificationCount > 0}}" class="notify-badge">{{unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}}</text>
+        </view>
+      </view>
+      <view class="stat-lines">
+        <text class="stat-line">{{unreadNotificationCount || 0}} 条未读</text>
+        <text class="stat-line">查看课程与系统通知</text>
+      </view>
+      <text class="stat-action">查看全部 ></text>
+    </view>
+
+    <view class="stat-card join-class-card" bindtap="goToJoinClass">
+      <view class="stat-card-head">
+        <text class="stat-title">加入班级</text>
+        <image class="stat-icon" src="../../../images/icons/home-calendar.svg" mode="aspectFit"></image>
+      </view>
+      <view class="stat-lines">
+        <text class="stat-line">扫码或输入班级码</text>
+        <text class="stat-line">一键加入教练班级</text>
+      </view>
+      <text class="stat-action">立即加入 ></text>
+    </view>
+  </view>
+
+  <view class="booking-card">
+    <view class="booking-main">
+      <text class="booking-title">课程预约</text>
+      <text class="booking-subtitle">选择适合你的课程</text>
+      <button class="booking-btn" bindtap="goToScheduleList">去预约</button>
+    </view>
+    <view class="booking-visual">
+      <image class="booking-illustration" src="../../../images/icons/home-calendar.svg" mode="aspectFit"></image>
+    </view>
+  </view>
+
+  <view class="schedule-card">
+    <view class="section-header" bindtap="goToBookedScheduleList">
+      <text class="section-title">近期课表</text>
+      <text class="section-more">查看更多 ></text>
+    </view>
+    <view wx:if="{{recentSchedules.length > 0}}" class="schedule-list">
+      <view wx:for="{{recentSchedules}}" wx:key="id" class="schedule-item">
+        <view class="schedule-date-box color-{{index % 2}}">
+          <text class="schedule-month-day">{{item.displayDate || item.scheduleDate}}</text>
+          <text class="schedule-week">{{item.weekday || '周'}}</text>
+        </view>
+        <view class="schedule-course">
+          <text class="schedule-name">{{item.courseName || '课程'}}</text>
+          <text class="schedule-meta">{{item.displayTime || item.scheduleTime}}  场地：{{item.location || '--'}}</text>
+        </view>
+        <text class="schedule-status status-{{item.statusClass || 'pending'}}">{{item.statusText || '待上课'}}</text>
+      </view>
+    </view>
+  </view>
+</view>
+

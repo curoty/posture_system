@@ -8,8 +8,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import joblib
 import numpy as np
@@ -22,12 +23,19 @@ from src.jsonl_sequence_dataset import (
     iter_jsonl_records,
 )
 from src.coach_feedback import generate_coach_feedback
-from src.model import ActionModelConfig, CNNLSTMAttentionClassifier
+from src.model import (
+    ActionModelConfig,
+    CNNLSTMAttentionClassifier,
+    StructuredActionClassifier,
+    StructuredModelConfig,
+)
 from src.quality_labels import (
     score_to_quality_code,
     score_to_quality_label,
 )
 from src.similarity_scoring import ReferenceLibrary, load_reference_library, score_sequence_against_references
+
+_LOGGER = logging.getLogger(__name__)
 
 # LightGBM is optional at import time — loaded on demand
 try:
@@ -37,19 +45,88 @@ except ImportError:
     _LGB_AVAILABLE = False
 
 
+class _QualitySchemaMismatch(ValueError):
+    """The action model and the LightGBM quality bundle come from different runs.
+
+    Subclasses ``ValueError`` so ``api.py`` surfaces it as a 422 rather than a
+    500 — the request is fine, the deployed artifacts are not.
+    """
+
+
 # ---------------------------------------------------------------------------
 # Model loading
 # ---------------------------------------------------------------------------
 
+# Union type of every backbone the inference path can serve.  Both classes expose
+# the same ``forward(x, return_embedding=..., return_attention=...)`` and
+# ``extract_embedding(x)`` interface, so everything downstream is arch-agnostic.
+ActionModel = Union[CNNLSTMAttentionClassifier, StructuredActionClassifier]
+
+# checkpoint["arch"] -> (model class, config class).  Checkpoints written before
+# the structured backbone existed have no "arch" key; they are always baseline.
+_ARCH_REGISTRY: Dict[str, tuple[type, type]] = {
+    "baseline": (CNNLSTMAttentionClassifier, ActionModelConfig),
+    "structured": (StructuredActionClassifier, StructuredModelConfig),
+}
+_DEFAULT_ARCH = "baseline"
+
+
 def load_action_model(
     model_path: str | Path, device: torch.device,
-) -> tuple[CNNLSTMAttentionClassifier, Dict[str, Any]]:
+) -> tuple[ActionModel, Dict[str, Any]]:
+    """Load an action model, dispatching on the architecture it was saved with.
+
+    The two backbones are independent ``nn.Module`` classes with incompatible
+    ``state_dict`` layouts, so the class must be chosen before loading weights.
+    ``train_multiclass.py`` stamps ``checkpoint["arch"]``; older single-class
+    checkpoints predate the structured backbone and default to ``"baseline"``.
+
+    Raises:
+        ValueError: on an unknown ``arch``, rather than silently falling back to
+            the baseline — a wrong class would fail with a confusing
+            ``state_dict`` key mismatch far from the real cause.
+    """
     checkpoint = torch.load(model_path, map_location=device, weights_only=False)
-    model = CNNLSTMAttentionClassifier(ActionModelConfig.from_dict(checkpoint["model_config"]))
+    arch = str(checkpoint.get("arch", _DEFAULT_ARCH))
+
+    if arch not in _ARCH_REGISTRY:
+        raise ValueError(
+            f"Unknown action-model arch {arch!r} in {model_path}. "
+            f"Supported: {sorted(_ARCH_REGISTRY)}"
+        )
+
+    model_cls, config_cls = _ARCH_REGISTRY[arch]
+    model = model_cls(config_cls.from_dict(checkpoint["model_config"]))
     model.load_state_dict(checkpoint["model_state_dict"])
     model.to(device)
     model.eval()
     return model, checkpoint
+
+
+def _resolve_action_labels(checkpoint: Dict[str, Any]) -> Dict[int, str]:
+    """Normalize the two label schemas into ``{class_id: action_name}``.
+
+    The trainers disagree on both the key and the direction of the mapping:
+
+    - ``train_action.py`` / SSL     -> ``action_labels``: {id: name}
+    - ``train_multiclass.py``       -> ``label_map``:     {name: id}   (inverted)
+
+    Reading the wrong one silently mislabels every prediction (e.g. calling a
+    ``side_push_recover`` a ``weight_shift``), so handle both explicitly and
+    fail loudly when neither is present.
+    """
+    metadata = checkpoint.get("label_metadata") or {}
+
+    if "action_labels" in metadata:
+        return {int(k): str(v) for k, v in metadata["action_labels"].items()}
+
+    if "label_map" in metadata:  # inverted: name -> id
+        return {int(v): str(k) for k, v in metadata["label_map"].items()}
+
+    raise ValueError(
+        "Checkpoint label_metadata has neither 'action_labels' nor 'label_map'; "
+        "cannot map predicted class ids back to action names."
+    )
 
 
 def load_lgb_quality_model(
@@ -97,11 +174,26 @@ def _load_quality_bundle_legacy(
 # LightGBM feature extraction (inference)
 # ---------------------------------------------------------------------------
 
+def _action_prob_feature_name(class_id: int, action_labels: Dict[int, str]) -> str:
+    """Column name for one action-probability feature.
+
+    Must mirror ``train_lgb_quality.build_lgb_feature_matrix`` exactly::
+
+        f"action_prob_{id_to_name.get(i, f'class_{i}')}"
+
+    Naming these ``action_prob_{class_id}`` instead would look up a key that is
+    absent from the trained ``feature_names``, and the probabilities would
+    silently be filled with 0.0 for every sample.
+    """
+    return f"action_prob_{action_labels.get(int(class_id), f'class_{class_id}')}"
+
+
 def _extract_lgb_features_inference(
     normalized_sequence: np.ndarray,
     embedding: np.ndarray,
     probabilities: np.ndarray,
     action_name: str,
+    action_labels: Dict[int, str],
     duration_seconds: float,
     missing_node_ratio: float,
     raw_sequence: np.ndarray,
@@ -116,6 +208,8 @@ def _extract_lgb_features_inference(
         embedding: [D] deep embedding from the action model.
         probabilities: [num_actions] softmax output.
         action_name: Predicted action label name.
+        action_labels: ``{class_id: action_name}`` from the checkpoint; names the
+            probability columns the same way training did.
         duration_seconds: Segment duration.
         missing_node_ratio: Fraction of missing sensor readings.
         raw_sequence: [T, nodes, 6] raw per-node IMU for motion stats.
@@ -134,7 +228,7 @@ def _extract_lgb_features_inference(
 
     # --- Action probabilities ---
     for i in range(len(probabilities)):
-        feature_dict[f"action_prob_{i}"] = float(probabilities[i])
+        feature_dict[_action_prob_feature_name(i, action_labels)] = float(probabilities[i])
 
     # --- Temporal stats ---
     flat = normalized_sequence.reshape(normalized_sequence.shape[0], -1)
@@ -305,7 +399,7 @@ def _build_top_predictions(
 
 def predict_record(
     record: Dict[str, Any],
-    action_model: CNNLSTMAttentionClassifier,
+    action_model: ActionModel,
     checkpoint: Dict[str, Any],
     device: torch.device,
     global_quality_model_path: Optional[str | Path] = None,
@@ -354,10 +448,7 @@ def predict_record(
     sorted_probs = np.sort(probabilities)[::-1]
     top_margin = float(sorted_probs[0] - sorted_probs[1]) if len(sorted_probs) > 1 else float(sorted_probs[0])
 
-    action_labels = {
-        int(label_id): str(label_name)
-        for label_id, label_name in checkpoint["label_metadata"]["action_labels"].items()
-    }
+    action_labels = _resolve_action_labels(checkpoint)
     action_name = action_labels[predicted_action_id]
 
     # --- Robustness gates ---
@@ -415,6 +506,7 @@ def predict_record(
                     embedding=embedding_array,
                     probabilities=probabilities,
                     action_name=action_name,
+                    action_labels=action_labels,
                     duration_seconds=duration_seconds,
                     missing_node_ratio=missing_node_ratio,
                     raw_sequence=raw_seq,
@@ -423,8 +515,17 @@ def predict_record(
                     lgb_bundle=lgb_bundle,
                 )
                 lgb_used = True
+            except _QualitySchemaMismatch:
+                # A mispaired action model + quality bundle is a deployment
+                # error, not a runtime hiccup.  Falling back to GaussianNB here
+                # would keep serving plausible-looking scores off a model that
+                # was never trained for these labels.
+                raise
             except Exception:
-                # Fall through to legacy
+                _LOGGER.warning(
+                    "LightGBM quality prediction failed; falling back to GaussianNB",
+                    exc_info=True,
+                )
                 lgb_bundle = None
 
         if lgb_bundle is None and not lgb_used:
@@ -518,6 +619,7 @@ def _predict_quality_lgb(
     embedding: np.ndarray,
     probabilities: np.ndarray,
     action_name: str,
+    action_labels: Dict[int, str],
     duration_seconds: float,
     missing_node_ratio: float,
     raw_sequence: Optional[np.ndarray],
@@ -531,16 +633,14 @@ def _predict_quality_lgb(
     cal_params = lgb_bundle.get("calibration_params", {})
     feature_names = lgb_bundle["feature_names"]
 
-    # Handle missing feature names for backward compat
-    action_prob_names_in_order = _resolve_action_prob_names(
-        feature_names, len(probabilities),
-    )
+    _assert_action_prob_schema(feature_names, probabilities, action_labels)
 
     features = _extract_lgb_features_inference(
         normalized_sequence=normalized_sequence,
         embedding=embedding,
         probabilities=probabilities,
         action_name=action_name,
+        action_labels=action_labels,
         duration_seconds=duration_seconds,
         missing_node_ratio=missing_node_ratio,
         raw_sequence=raw_sequence if raw_sequence is not None else np.zeros((1, 9, 6), dtype=np.float32),
@@ -548,9 +648,6 @@ def _predict_quality_lgb(
         reference_library=reference_library,
         feature_names=feature_names,
     )
-
-    # Align feature names for probability slots
-    features = _align_feature_names(features, feature_names, action_prob_names_in_order, probabilities)
 
     X_scaled = scaler.transform(features)
     raw_score = float(booster.predict(X_scaled, num_iteration=booster.best_iteration)[0])
@@ -577,39 +674,30 @@ def _predict_quality_lgb(
     }
 
 
-def _resolve_action_prob_names(
-    feature_names: List[str], num_probs: int,
-) -> List[str]:
-    """Find the action probability feature names from the training schema."""
-    prob_names = [n for n in feature_names if n.startswith("action_prob_")]
-    if len(prob_names) == num_probs:
-        return prob_names
-    # Fallback: generate expected names
-    return [f"action_prob_{i}" for i in range(num_probs)]
-
-
-def _align_feature_names(
-    features: np.ndarray,
+def _assert_action_prob_schema(
     feature_names: List[str],
-    action_prob_names_in_order: List[str],
     probabilities: np.ndarray,
-) -> np.ndarray:
-    """Ensure feature columns match the training schema, filling missing with zeros."""
-    feature_dict = {}
-    for i, name in enumerate(feature_names):
-        if i < features.shape[1]:
-            feature_dict[name] = float(features[0, i])
+    action_labels: Dict[int, str],
+) -> None:
+    """Fail loudly when the checkpoint's labels don't match the quality bundle.
 
-    # Override action probability slots to ensure correct alignment
-    for pi, prob_name in enumerate(action_prob_names_in_order):
-        if pi < len(probabilities):
-            feature_dict[prob_name] = float(probabilities[pi])
-
-    aligned = np.array(
-        [[feature_dict.get(name, 0.0) for name in feature_names]],
-        dtype=np.float32,
-    )
-    return aligned
+    ``_extract_lgb_features_inference`` assembles its row with
+    ``feature_dict.get(name, 0.0)``, so a probability column the action model
+    doesn't produce is not an error there — it is silently zero-filled, and the
+    regressor scores every sample as if the classifier had been maximally
+    unsure.  That failure is invisible in the output: scores stay in range, no
+    exception is raised.  Catch the mismatch here instead, where the action
+    model and the quality bundle are both in hand.
+    """
+    expected = {_action_prob_feature_name(i, action_labels) for i in range(len(probabilities))}
+    trained = {name for name in feature_names if name.startswith("action_prob_")}
+    if expected != trained:
+        raise _QualitySchemaMismatch(
+            "Action-model labels do not match the LightGBM quality bundle. "
+            f"Model produces {sorted(expected)}; bundle was trained on "
+            f"{sorted(trained)}. The two artifacts are from different runs — "
+            "retrain the quality model against this action model."
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -702,6 +790,20 @@ def _extract_raw_sequence_inference(
     for ni in range(raw.shape[1]):
         for ci in range(raw.shape[2]):
             raw[:, ni, ci] = _fill_nan_vector(raw[:, ni, ci], 0.0)
+
+    # 必须与模型输入走同一套去噪配置。这条原始序列专供质量模型的手工特征
+    # (acc_var_global / gyro_var_global / jerk_roughness / 逐节点方差)，
+    # 而**方差和 jerk 对野值极其敏感** —— 单个 228g 的尖刺就能主导整个
+    # acc_var_global。若此处不去噪而模型输入去了噪，训练与推理的特征分布
+    # 将不一致。
+    if config.denoise_spikes or config.denoise_lowpass_hz is not None:
+        from src.denoise import denoise_sequence
+        raw, _stats = denoise_sequence(
+            raw,
+            sample_rate_hz=config.sample_rate_hz,
+            remove_spikes=config.denoise_spikes,
+            lowpass_cutoff_hz=config.denoise_lowpass_hz,
+        )
 
     return raw
 

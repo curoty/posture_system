@@ -1,0 +1,13 @@
+{
+  "name": "skateActionAnalyze",
+  "version": "1.0.0",
+  "description": "Skating action analysis function",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"no test specified\""
+  },
+  "dependencies": {
+    "mysql2": "^3.14.2",
+    "wx-server-sdk": "~2.4.0"
+  }
+}

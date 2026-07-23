@@ -1,0 +1,54 @@
+<view class="container">
+  <view class="page-head">
+    <view class="head-copy">
+      <text class="head-title">消息通知</text>
+      <text class="head-subtitle">训练报告、课程动态和奖励提醒</text>
+    </view>
+    <view class="head-actions">
+      <view
+        class="head-clear {{unreadCount > 0 ? 'is-active' : ''}} {{markingAllRead ? 'is-loading' : ''}}"
+        bindtap="markAllRead"
+      >
+        <image class="head-clear-icon" src="../../../images/icons/clear-broom.svg" mode="aspectFit"></image>
+      </view>
+      <view class="head-badge">
+        <text class="head-badge-text">{{unreadCount > 99 ? '99+' : unreadCount}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{loading}}" class="loading-tip">消息加载中...</view>
+  <view wx:if="{{loadError}}" class="error-tip">{{loadError}}</view>
+
+  <view wx:if="{{!loading && notifications.length > 0}}" class="list">
+    <view
+      wx:for="{{notifications}}"
+      wx:key="id"
+      class="item {{item.accentClass}} {{item.isRead ? 'is-read' : 'is-unread'}}"
+      data-id="{{item.id}}"
+      bindtap="tapItem"
+    >
+      <view class="item-icon-shell">
+        <image class="item-icon" src="{{item.icon}}" mode="aspectFit"></image>
+      </view>
+      <view class="item-main">
+        <view class="item-head">
+          <text class="item-title">{{item.displayTitle}}</text>
+          <text class="item-time">{{item.timeText}}</text>
+        </view>
+        <text class="item-summary">{{item.displaySummary}}</text>
+        <view class="item-foot">
+          <text class="item-tag">{{item.categoryLabel}}</text>
+          <text wx:if="{{!item.isRead}}" class="item-dot"></text>
+        </view>
+      </view>
+      <image class="item-arrow" src="../../../images/icons/profile-chevron.svg" mode="aspectFit"></image>
+    </view>
+  </view>
+
+  <view wx:if="{{!loading && notifications.length === 0}}" class="empty">
+    <image class="empty-icon" src="../../../images/icons/notification-system.svg" mode="aspectFit"></image>
+    <text class="empty-text">暂无消息通知</text>
+    <text class="empty-tip">训练报告、课程提醒和奖励会在这里显示</text>
+  </view>
+</view>

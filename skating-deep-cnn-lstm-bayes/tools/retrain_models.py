@@ -566,6 +566,17 @@ def _extract_raw_seq(record, config):
     for ni in range(raw.shape[1]):
         for ci in range(raw.shape[2]):
             raw[:, ni, ci] = _fill_nan_vector(raw[:, ni, ci], 0.0)
+
+    # 与 predict._extract_raw_sequence_inference 保持一致的去噪，否则质量模型
+    # 训练时看到的方差/jerk 分布与推理时不同。
+    if config.denoise_spikes or config.denoise_lowpass_hz is not None:
+        from src.denoise import denoise_sequence
+        raw, _stats = denoise_sequence(
+            raw,
+            sample_rate_hz=config.sample_rate_hz,
+            remove_spikes=config.denoise_spikes,
+            lowpass_cutoff_hz=config.denoise_lowpass_hz,
+        )
     return raw
 
 

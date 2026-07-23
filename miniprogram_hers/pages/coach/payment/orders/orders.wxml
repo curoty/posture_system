@@ -1,0 +1,38 @@
+<view class="container">
+  <view class="header-section">
+    <input placeholder="搜索订单" bindinput="bindSearchInput" class="search-input"/>
+    <picker bindchange="bindStatusChange" range="{{statusOptions}}" class="status-picker">
+      <view class="picker-text">
+        {{selectedStatus}}
+      </view>
+    </picker>
+  </view>
+
+  <view class="order-list">
+    <view wx:for="{{orders}}" wx:key="id" class="order-item">
+      <view class="order-header">
+        <text class="order-id">订单号：{{item.id}}</text>
+        <text class="order-status status-{{item.status}}">{{item.status === 'pending' ? '待处理' : item.status === 'completed' ? '已完成' : '已取消'}}</text>
+      </view>
+      <view class="order-info">
+        <text class="order-course">{{item.course.title}}</text>
+        <text class="order-student">学生：{{item.student.name}}</text>
+        <text class="order-time">下单时间：{{item.time}}</text>
+      </view>
+      <view class="order-footer">
+        <text class="order-price">¥{{item.price}}</text>
+        <view class="order-actions">
+          <button bindtap="viewOrder" data-id="{{item.id}}" class="action-btn">查看</button>
+          <button bindtap="processOrder" data-id="{{item.id}}" class="action-btn" wx:if="item.status === 'pending'">处理</button>
+          <button bindtap="cancelOrder" data-id="{{item.id}}" class="action-btn danger" wx:if="item.status === 'pending'">取消</button>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="orders.length === 0" class="empty-state">
+    <text class="empty-icon">📋</text>
+    <text class="empty-text">暂无订单</text>
+    <text class="empty-tip">学生报名课程后，这里会显示订单列表</text>
+  </view>
+</view>

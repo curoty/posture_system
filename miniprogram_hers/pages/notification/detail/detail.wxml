@@ -1,0 +1,18 @@
+<view class="container">
+  <view class="card">
+    <view class="meta-row">
+      <view class="meta-left">
+        <view class="icon-shell">
+          <image class="icon" src="{{icon}}" mode="aspectFit"></image>
+        </view>
+        <view class="meta-copy">
+          <text class="tag">{{categoryLabel}}</text>
+          <text class="sender">{{senderName}}</text>
+        </view>
+      </view>
+      <text wx:if="{{timeText}}" class="time">{{timeText}}</text>
+    </view>
+    <text class="title">{{title}}</text>
+    <text class="content">{{content || '暂无详情'}}</text>
+  </view>
+</view>

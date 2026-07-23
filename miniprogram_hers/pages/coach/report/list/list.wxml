@@ -1,0 +1,96 @@
+<view class="container">
+  <view class="publish-card">
+    <text class="card-title">发布训练总反馈</text>
+
+    <input
+      class="title-input"
+      placeholder="请输入标题（可选）"
+      maxlength="40"
+      value="{{titleInput}}"
+      bindinput="onTitleInput"
+    />
+
+    <textarea
+      class="content-input"
+      placeholder="请输入本次训练总反馈，发布后会通知名下所有学员"
+      maxlength="3000"
+      value="{{contentInput}}"
+      bindinput="onContentInput"
+    />
+
+    <view class="flower-section">
+      <view class="flower-title-row">
+        <text class="flower-title">颁发小红花</text>
+        <text class="flower-tip">仅已设置课时且已上课的学员可发放小红花</text>
+      </view>
+
+      <view wx:if="{{studentsLoading}}" class="flower-state">学员加载中...</view>
+      <view wx:elif="{{studentLoadError}}" class="flower-state error">{{studentLoadError}}</view>
+      <view wx:elif="{{students.length === 0}}" class="flower-state">暂无可设置的学员</view>
+
+      <view wx:else class="flower-list">
+        <view wx:for="{{students}}" wx:key="id" class="flower-item">
+          <view class="student-row">
+            <text class="student-name">{{item.name}}</text>
+            <text wx:if="{{!item.canReceiveFlower}}" class="student-lock">{{item.flowerDisabledText || '未上课'}}</text>
+            <text wx:elif="{{item.completedLessonCount > 0}}" class="student-meta">已上课{{item.completedLessonCount}}次</text>
+          </view>
+          <view class="flower-editor-row {{!item.canReceiveFlower ? 'disabled' : ''}}">
+            <view
+              class="flower-step {{!item.canReceiveFlower ? 'disabled' : ''}}"
+              data-id="{{item.id}}"
+              data-count="{{item.flowerCount}}"
+              bindtap="onFlowerMinus"
+            >-</view>
+            <input
+              class="flower-input"
+              type="digit"
+              maxlength="3"
+              placeholder="0-5"
+              value="{{item.flowerInputText}}"
+              data-id="{{item.id}}"
+              disabled="{{!item.canReceiveFlower}}"
+              bindinput="onFlowerInput"
+              bindblur="onFlowerInputBlur"
+            />
+            <view
+              class="flower-step {{!item.canReceiveFlower ? 'disabled' : ''}}"
+              data-id="{{item.id}}"
+              data-count="{{item.flowerCount}}"
+              bindtap="onFlowerPlus"
+            >+</view>
+            <text class="flower-unit">🌸</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <button class="publish-btn" bindtap="publishReport" loading="{{publishing}}" disabled="{{publishing}}">
+      {{publishing ? '发布中...' : '发布并通知所有学员'}}
+    </button>
+  </view>
+
+  <view class="list-title-wrap">
+    <text class="list-title">已发布报告</text>
+  </view>
+
+  <view wx:if="{{loading}}" class="state-tip">加载中...</view>
+  <view wx:if="{{loadError}}" class="state-tip error">{{loadError}}</view>
+
+  <view wx:if="{{!loading && reports.length > 0}}" class="report-list">
+    <view wx:for="{{reports}}" wx:key="id" class="report-item" data-id="{{item.id}}" bindtap="goDetail">
+      <view class="report-head">
+        <text class="report-title">{{item.title}}</text>
+        <text class="report-time">{{item.createdAtText}}</text>
+      </view>
+      <text class="report-preview">{{item.contentPreview || '无内容摘要'}}</text>
+      <view class="report-foot">
+        <text class="student-count">覆盖学生：{{item.studentCount}} 人</text>
+        <text class="flower-count">🌸{{item.totalFlowerCount}}</text>
+        <text class="detail-arrow">查看详情 ></text>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{!loading && reports.length === 0 && !loadError}}" class="state-tip">暂无训练报告</view>
+</view>

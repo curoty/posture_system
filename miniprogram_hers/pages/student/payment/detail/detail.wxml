@@ -1,0 +1,42 @@
+<view class="page" wx:if="{{course}}">
+  <view class="image-section">
+    <image
+      src="{{course.displayImageUrl}}"
+      mode="aspectFill"
+      class="goods-banner"
+      binderror="handleCourseImageError"
+    ></image>
+  </view>
+
+  <view class="info-section">
+    <text class="goods-title">{{course.title}}</text>
+
+    <view class="price-row">
+      <text class="price-current">¥{{course.price}}</text>
+      <text class="price-original" wx:if="{{course.originalPrice && course.originalPrice > course.price}}">¥{{course.originalPrice}}</text>
+    </view>
+
+    <view class="meta-row">
+      <text class="meta-tag" wx:if="{{course.categoryLabel}}">{{course.categoryLabel}}</text>
+      <text class="meta-tag status-stock">{{course.stockText}}</text>
+      <text class="meta-tag status-active">在售</text>
+    </view>
+  </view>
+
+  <view class="desc-section">
+    <text class="section-title">商品详情</text>
+    <text class="desc-text">{{course.description}}</text>
+  </view>
+
+  <view class="bottom-bar">
+    <view class="bottom-price">
+      <text class="bottom-price-label">价格</text>
+      <text class="bottom-price-value">¥{{course.price}}</text>
+    </view>
+    <button class="contact-btn" bindtap="onContactCoach">联系教练</button>
+  </view>
+</view>
+
+<view class="empty-state" wx:else>
+  <text class="empty-text">商品信息加载失败</text>
+</view>

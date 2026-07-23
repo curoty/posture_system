@@ -1,0 +1,96 @@
+<view class="container">
+  <!-- 基本信息 -->
+  <view class="section-card">
+    <view class="section-title">基本信息</view>
+
+    <view class="form-item">
+      <text class="label"><text class="req">*</text>{{i18n.labelTitle}}</text>
+      <input class="input {{titleForbiddenWords.length > 0 ? 'has-forbidden' : ''}}" value="{{title}}" bindinput="bindTitleInput" placeholder="{{i18n.titlePlaceholder}}" maxlength="50" />
+      <view wx:if="{{titleForbiddenWords.length > 0}}" class="forbidden-warning">
+        <text class="forbidden-icon">⚠️</text>
+        <text class="forbidden-text">{{i18n.forbiddenWordsTip}}{{titleForbiddenWords.join('、')}}</text>
+      </view>
+    </view>
+
+    <view class="form-item">
+      <text class="label"><text class="req">*</text>{{i18n.labelPrice}}</text>
+      <view class="price-input-wrap {{price ? 'has-value' : ''}}">
+        <text class="price-unit">¥</text>
+        <input class="input price-input" type="digit" value="{{price}}" bindinput="bindPriceInput" placeholder="{{i18n.pricePlaceholder}}" />
+      </view>
+    </view>
+
+    <view class="form-row">
+      <view class="form-item form-col">
+        <text class="label">{{i18n.labelCategory}}</text>
+        <picker mode="selector" range="{{categoryOptions}}" range-key="label" value="{{categoryIndex}}" bindchange="bindCategoryChange" class="picker">
+          <view class="picker-inner">{{categoryOptions[categoryIndex].label}}<text class="picker-arrow">▾</text></view>
+        </picker>
+      </view>
+      <view class="form-item form-col">
+        <text class="label">{{i18n.labelStock}}</text>
+        <input class="input" type="number" value="{{maxParticipants}}" bindinput="bindMaxParticipantsInput" placeholder="{{i18n.stockPlaceholder}}" />
+      </view>
+    </view>
+  </view>
+
+  <!-- 商品图片 -->
+  <view class="section-card">
+    <view class="section-title">{{i18n.imageLabel}}<text class="section-sub">（最多 {{maxImageCount}} 张，第 1 张为主图）</text></view>
+    <view class="image-grid">
+      <view class="image-tile" wx:for="{{imageTempPaths}}" wx:key="*this" data-index="{{index}}" bindtap="previewImage">
+        <image class="tile-img" src="{{item}}" mode="aspectFill" binderror="handleImagePreviewError"></image>
+        <view class="tile-remove" catchtap="removeImageAt" data-index="{{index}}">×</view>
+        <view wx:if="{{index === 0}}" class="tile-main-badge">主图</view>
+      </view>
+      <view wx:if="{{imageTempPaths.length < maxImageCount}}" class="image-tile add-tile" bindtap="chooseImage">
+        <text class="add-plus">+</text>
+        <text class="add-text">{{i18n.addImage}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 商品描述 -->
+  <view class="section-card">
+    <view class="section-title">{{i18n.labelDesc}}</view>
+    <textarea class="textarea {{descForbiddenWords.length > 0 ? 'has-forbidden' : ''}}" value="{{description}}" bindinput="bindDescriptionInput" placeholder="{{i18n.descPlaceholder}}" maxlength="500" />
+    <view wx:if="{{descForbiddenWords.length > 0}}" class="forbidden-warning">
+      <text class="forbidden-icon">⚠️</text>
+      <text class="forbidden-text">{{i18n.forbiddenWordsTip}}{{descForbiddenWords.join('、')}}</text>
+    </view>
+    <view class="char-count">{{description.length}}/500</view>
+  </view>
+
+  <!-- 上架时间（选填，折叠） -->
+  <view class="section-card">
+    <view class="section-title toggle-row" bindtap="toggleTimeSection">
+      <text>{{i18n.labelTimeSection}}</text>
+      <text class="toggle-arrow">{{timeSectionOpen ? '收起 ▲' : '展开 ▾'}}</text>
+    </view>
+    <view wx:if="{{timeSectionOpen}}" class="time-body">
+      <view class="section-hint">{{i18n.timeSectionHint}}</view>
+      <view class="form-item">
+        <text class="label">{{i18n.labelStart}}</text>
+        <view class="datetime-row">
+          <picker mode="date" value="{{startDate}}" bindchange="bindStartDateChange" class="picker"><view class="picker-inner">{{startDate}}</view></picker>
+          <picker mode="time" value="{{startTime}}" bindchange="bindStartTimeChange" class="picker"><view class="picker-inner">{{startTime}}</view></picker>
+        </view>
+      </view>
+      <view class="form-item">
+        <text class="label">{{i18n.labelEnd}}</text>
+        <view class="datetime-row">
+          <picker mode="date" value="{{endDate}}" bindchange="bindEndDateChange" class="picker"><view class="picker-inner">{{endDate}}</view></picker>
+          <picker mode="time" value="{{endTime}}" bindchange="bindEndTimeChange" class="picker"><view class="picker-inner">{{endTime}}</view></picker>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="submit-bar">
+    <button class="submit-btn {{canSubmit ? '' : 'disabled'}}" bindtap="submitPublish" loading="{{submitting}}" disabled="{{submitting || !canSubmit}}">{{submitting ? (editId ? i18n.updating : i18n.publishing) : (editId ? i18n.updateButton : i18n.submitButton)}}</button>
+    <view wx:if="{{!canSubmit}}" class="submit-tip">
+      <text wx:if="{{titleForbiddenWords.length > 0 || descForbiddenWords.length > 0}}" class="forbidden-submit-tip">{{i18n.toastForbiddenWords}}</text>
+      <text wx:else>请填写商品标题和价格</text>
+    </view>
+  </view>
+</view>

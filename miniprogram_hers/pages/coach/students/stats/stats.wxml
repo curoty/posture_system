@@ -1,0 +1,78 @@
+<view class="container">
+  <view class="header-section">
+    <text class="student-name">{{studentInfo.name}}</text>
+    <picker bindchange="bindPeriodChange" range="{{periods}}" class="period-picker">
+      <view class="picker-text">
+        {{selectedPeriod}}
+      </view>
+    </picker>
+  </view>
+
+  <view class="stats-section">
+    <view class="stat-card">
+      <text class="stat-value">{{stats.attendanceRate}}%</text>
+      <text class="stat-label">出勤率</text>
+    </view>
+    <view class="stat-card">
+      <text class="stat-value">{{stats.averageScore}}</text>
+      <text class="stat-label">平均评分</text>
+    </view>
+    <view class="stat-card">
+      <text class="stat-value">{{stats.totalTrainingTime}}</text>
+      <text class="stat-label">总训练时长（分钟）</text>
+    </view>
+  </view>
+
+  <view class="chart-section">
+    <text class="section-title">评分趋势</text>
+    <view class="chart-container">
+      <view wx:for="{{scoreTrend}}" wx:key="date" class="chart-item">
+        <text class="chart-date">{{item.date}}</text>
+        <view class="chart-bar-container">
+          <view class="chart-bar" style="height: {{item.score}}%"></view>
+        </view>
+        <text class="chart-score">{{item.score}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="intensity-section">
+    <text class="section-title">训练强度分布</text>
+    <view class="intensity-container">
+      <view class="intensity-item">
+        <text class="intensity-label">低</text>
+        <view class="intensity-bar-container">
+          <view class="intensity-bar low" style="width: {{intensityDistribution.low}}%"></view>
+        </view>
+        <text class="intensity-value">{{intensityDistribution.low}}%</text>
+      </view>
+      <view class="intensity-item">
+        <text class="intensity-label">中</text>
+        <view class="intensity-bar-container">
+          <view class="intensity-bar medium" style="width: {{intensityDistribution.medium}}%"></view>
+        </view>
+        <text class="intensity-value">{{intensityDistribution.medium}}%</text>
+      </view>
+      <view class="intensity-item">
+        <text class="intensity-label">高</text>
+        <view class="intensity-bar-container">
+          <view class="intensity-bar high" style="width: {{intensityDistribution.high}}%"></view>
+        </view>
+        <text class="intensity-value">{{intensityDistribution.high}}%</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="training-summary">
+    <text class="section-title">训练总结</text>
+    <text class="summary-text">{{trainingSummary}}</text>
+  </view>
+
+  <view class="recommendations">
+    <text class="section-title">优化建议</text>
+    <view wx:for="{{recommendations}}" wx:key="index" class="recommendation-item">
+      <text class="recommendation-icon">💡</text>
+      <text class="recommendation-text">{{item}}</text>
+    </view>
+  </view>
+</view>

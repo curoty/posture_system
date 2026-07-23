@@ -1,0 +1,66 @@
+<view class="page">
+  <view class="container">
+    <view class="header">
+      <text class="header-icon">🎓</text>
+      <text class="header-title">加入班级</text>
+      <text class="header-desc">输入教练分享的6位班级码或扫码加入</text>
+    </view>
+
+    <view wx:if="{{!hasResult}}" class="input-section">
+      <view class="input-group">
+        <text class="input-label">班级数字码</text>
+        <view class="code-input-wrapper">
+          <input 
+            class="code-input" 
+            type="number" 
+            maxlength="6" 
+            placeholder="输入6位班级码"
+            value="{{inputCode}}"
+            bindinput="onCodeInput"
+            focus="{{true}}"
+          />
+        </view>
+        <text class="input-hint">请向教练索要6位数字班级码</text>
+      </view>
+
+      <view class="btn-group">
+        <button class="join-btn" bindtap="onJoinClass" loading="{{loading}}" disabled="{{inputCode.length < 6 || loading}}">
+          立即加入
+        </button>
+        <view class="scan-btn" bindtap="onScanCode">
+          <text class="scan-icon">📷</text>
+          <text class="scan-text">扫码加入</text>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{hasResult && resultType === 'success'}}" class="result-section">
+      <view class="result-icon success-icon">✅</view>
+      <text class="result-title">{{resultTitle}}</text>
+      <text class="result-desc">{{resultDesc}}</text>
+      <view class="result-actions">
+        <button class="result-btn primary-btn" bindtap="onBackToHome">返回首页</button>
+        <button class="result-btn secondary-btn" bindtap="onRefreshInput">加入其他班级</button>
+      </view>
+    </view>
+
+    <view wx:if="{{hasResult && resultType === 'error'}}" class="result-section">
+      <view class="result-icon error-icon">❌</view>
+      <text class="result-title">{{resultTitle}}</text>
+      <text class="result-desc">{{resultDesc}}</text>
+      <view class="result-actions">
+        <button class="result-btn primary-btn" bindtap="onRefreshInput">重新输入</button>
+        <button class="result-btn secondary-btn" bindtap="onBackToHome">返回首页</button>
+      </view>
+    </view>
+
+    <view wx:if="{{hasResult && resultType === 'info'}}" class="result-section">
+      <view class="result-icon info-icon">ℹ️</view>
+      <text class="result-title">{{resultTitle}}</text>
+      <text class="result-desc">{{resultDesc}}</text>
+      <view class="result-actions">
+        <button class="result-btn primary-btn" bindtap="onBackToHome">返回首页</button>
+      </view>
+    </view>
+  </view>
+</view>

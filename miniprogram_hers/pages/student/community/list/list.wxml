@@ -1,0 +1,87 @@
+<view class="community-page">
+  <view class="search-row">
+    <view class="search-box">
+      <image class="search-icon" src="../../../../images/icons/mall-search.svg" mode="aspectFit"></image>
+      <input
+        placeholder="搜索视频或用户"
+        placeholder-class="search-placeholder"
+        bindinput="bindSearchInput"
+        class="search-input"
+      />
+    </view>
+    <view class="search-btn">搜索</view>
+    <view class="plus-btn" bindtap="addPost">
+      <text class="plus-text">+</text>
+    </view>
+  </view>
+
+  <view class="category-tabs">
+    <view class="category-tab {{activeCategory === 'recommend' ? 'active' : ''}}" data-category="recommend" bindtap="switchCategory">
+      <text class="category-text">推荐</text>
+      <view wx:if="{{activeCategory === 'recommend'}}" class="category-bar"></view>
+    </view>
+    <view class="category-tab {{activeCategory === 'latest' ? 'active' : ''}}" data-category="latest" bindtap="switchCategory">
+      <text class="category-text">最新</text>
+      <view wx:if="{{activeCategory === 'latest'}}" class="category-bar"></view>
+    </view>
+  </view>
+
+  <scroll-view class="post-scroll" scroll-y="{{true}}" enhanced="{{true}}" show-scrollbar="{{false}}">
+    <view class="video-grid">
+      <view wx:for="{{posts}}" wx:key="id" class="video-card">
+        <view class="cover-wrap">
+          <image
+            wx:if="{{item.previewImage}}"
+            class="video-cover"
+            src="{{item.previewImage}}"
+            mode="aspectFill"
+            data-id="{{item.id}}"
+            binderror="handlePreviewImageError"
+          ></image>
+          <view wx:else class="video-placeholder"></view>
+          <view class="cover-overlay"></view>
+          <image class="play-icon" src="../../../../images/icons/community-play.svg" mode="aspectFit"></image>
+          <text class="video-duration">{{item.durationText}}</text>
+        </view>
+
+        <navigator url="/pages/student/community/detail/detail?id={{item.id}}" class="video-body">
+          <text class="video-title">{{item.title}}</text>
+          <view class="card-footer">
+            <view class="author-info">
+              <image class="author-avatar" src="{{item.author.avatarUrl}}" mode="aspectFill"></image>
+              <text class="author-name">{{item.author.name}}</text>
+              <text wx:if="{{item.author.uploader_type === 'coach'}}" class="author-role-tag coach">教练</text>
+            </view>
+            <view class="video-stats">
+              <view class="video-stat">
+                <image class="stat-mini-icon" src="../../../../images/icons/community-heart.svg" mode="aspectFit"></image>
+                <text class="video-stat-text">{{item.likes || 0}}</text>
+              </view>
+              <view class="video-stat">
+                <image class="stat-mini-icon" src="../../../../images/icons/community-comment.svg" mode="aspectFit"></image>
+                <text class="video-stat-text">{{item.comments || 0}}</text>
+              </view>
+            </view>
+          </view>
+        </navigator>
+        <view class="video-actions">
+          <navigator url="/pages/student/community/detail/detail?id={{item.id}}" class="action-btn action-detail">查看详情</navigator>
+          <button
+            wx:if="{{currentUserId && (item.uploaderId === currentUserId)}}"
+            class="action-btn action-delete"
+            data-id="{{item.id}}"
+            data-title="{{item.title}}"
+            bindtap="onDeletePost"
+            loading="{{deletingPostId === item.id}}"
+            disabled="{{deletingPostId === item.id}}"
+          >删除</button>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{posts.length === 0}}" class="empty-state">
+      <text class="empty-text">还没有新的社区视频</text>
+    </view>
+    <view class="list-bottom-safe"></view>
+  </scroll-view>
+</view>

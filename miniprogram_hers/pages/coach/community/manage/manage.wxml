@@ -1,0 +1,75 @@
+<view class="container">
+  <view class="forum-top-fixed">
+    <view class="forum-top-row">
+      <view class="forum-notice">
+        <text class="forum-notice-text">倡导和谐交流，文明发言</text>
+      </view>
+      <view wx:if="{{isAdmin}}" bindtap="goToNotificationList" class="notify-bell-btn">
+        <text class="notify-bell-icon">🔔</text>
+        <text wx:if="{{unreadNotificationCount > 0}}" class="notify-bell-badge">{{unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}}</text>
+      </view>
+    </view>
+    <view class="header-section">
+      <input placeholder="搜索视频" bindinput="bindSearchInput" class="search-input"/>
+      <button bindtap="addPost" class="add-btn">+ 发布视频</button>
+    </view>
+    <view class="module-tabs">
+      <view class="module-tab active">视频</view>
+    </view>
+  </view>
+
+  <scroll-view class="post-scroll" scroll-y="{{true}}">
+    <view class="video-list">
+      <view wx:for="{{posts}}" wx:key="id" class="video-item">
+        <video
+          wx:if="{{item.videoSrc}}"
+          class="video-player"
+          src="{{item.videoSrc}}"
+          poster="{{item.previewImage || ''}}"
+          preload="none"
+          controls
+          objectFit="cover"
+          data-id="{{item.id}}"
+          binderror="handleVideoError"
+        ></video>
+        <view wx:else class="video-failed">视频加载失败</view>
+        <view class="video-meta">
+          <text class="video-title">{{item.title}}</text>
+          <view class="video-author-row">
+            <text class="video-author">{{item.author.name}} · {{item.time}}</text>
+            <text wx:if="{{item.author.uploader_type === 'coach'}}" class="author-role-tag coach">教练</text>
+          </view>
+        </view>
+        <view class="video-actions">
+          <navigator url="/pages/student/community/detail/detail?id={{item.id}}" class="action-btn action-detail">查看详情</navigator>
+          <button
+            wx:if="{{currentUserId && (isAdmin || item.uploaderId === currentUserId)}}"
+            class="action-btn action-delete"
+            data-id="{{item.id}}"
+            data-title="{{item.title}}"
+            bindtap="onDeleteCommunityPost"
+            loading="{{deletingPostId === item.id}}"
+            disabled="{{deletingPostId === item.id}}"
+          >删除</button>
+          <button
+            wx:if="{{isAdmin}}"
+            class="action-btn action-moderate"
+            data-id="{{item.id}}"
+            data-title="{{item.title}}"
+            bindtap="confirmModeratePost"
+            loading="{{moderating}}"
+            disabled="{{moderating}}"
+          >违规删除</button>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{posts.length === 0}}" class="empty-state">
+      <text class="empty-icon">🫥</text>
+      <text class="empty-text">暂无视频</text>
+      <text class="empty-tip">发一个视频试试</text>
+    </view>
+    <view class="tabbar-spacer"></view>
+  </scroll-view>
+</view>
+<coach-tab-bar selected="community" />

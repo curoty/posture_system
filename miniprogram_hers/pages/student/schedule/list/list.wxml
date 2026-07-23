@@ -1,0 +1,137 @@
+<view class="page">
+  <view class="schedule-page">
+    <view wx:if="{{!bookedOnly}}" class="hero-card">
+      <view class="hero-copy">
+        <text class="hero-eyebrow">课程预约</text>
+        <text class="hero-title">选择适合你的课程</text>
+        <text class="hero-desc">按上课时间顺序查看可预约课表，轻松安排本周训练。</text>
+      </view>
+      <view class="hero-art">
+        <image class="hero-icon" src="/images/icons/home-calendar.svg" mode="aspectFit" />
+      </view>
+    </view>
+
+    <view wx:if="{{lessonPackage.enabled && !isCoachView}}" class="package-card">
+      <view class="package-item">
+        <text class="package-value">{{lessonPackage.remainingLessons}}</text>
+        <text class="package-label">剩余课时</text>
+      </view>
+      <view class="package-divider"></view>
+      <view class="package-item">
+        <text class="package-value">{{lessonPackage.usedLessons}}</text>
+        <text class="package-label">已用课时</text>
+      </view>
+      <view class="package-divider"></view>
+      <view class="package-item">
+        <text class="package-value">{{lessonPackage.totalLessons}}</text>
+        <text class="package-label">总课时</text>
+      </view>
+    </view>
+
+    <view wx:if="{{loading && !hasLoaded}}" class="state-card">
+      <text class="state-text">正在加载课程安排...</text>
+    </view>
+
+    <view wx:if="{{loadError}}" class="state-card error-card">
+      <text class="state-text error-text">{{loadError}}</text>
+      <button class="retry-btn" bindtap="loadAll" loading="{{loading}}" disabled="{{loading}}">重新加载</button>
+    </view>
+
+    <view wx:if="{{!bookedOnly}}" class="section-card">
+      <view class="section-head">
+        <view>
+          <text class="section-title">{{isCoachView ? '课表安排' : '可预约课表'}}</text>
+          <text class="section-subtitle">{{isCoachView ? '按上课时间查看已发布课程' : '按时间排序，选择想上的课程'}}</text>
+        </view>
+      </view>
+
+      <view wx:if="{{!loading && !loadError && slots.length === 0}}" class="empty-block">
+        <text class="empty-title">{{isCoachView ? '暂时没有课程安排' : (hasNoCoachBinding ? '尚未绑定教练' : '暂时没有可预约课程')}}</text>
+        <text class="empty-desc">{{isCoachView ? '当前还没有发布新的课程。' : (hasNoCoachBinding ? '您的账号还未绑定教练，请联系管理员设置教练关系后再查看可预约课程。' : '教练发布新课程后会在这里显示。')}}</text>
+      </view>
+
+      <view wx:if="{{!loadError && slots.length > 0}}" class="schedule-list">
+        <view wx:for="{{slots}}" wx:key="id" class="schedule-card">
+          <view class="schedule-top">
+            <view class="date-badge">
+              <text class="date-badge-day">{{item.monthDay}}</text>
+              <text class="date-badge-week">{{item.weekday}}</text>
+            </view>
+
+            <view class="schedule-content">
+              <view class="schedule-row">
+                <text class="schedule-title">{{item.title}}</text>
+                <text wx:if="{{item.statusText}}" class="schedule-status status-{{item.statusClass}}">{{item.statusText}}</text>
+              </view>
+              <text class="schedule-time">{{item.timeRange}}</text>
+              <text class="schedule-meta">教练：{{item.coachName}}</text>
+              <text wx:if="{{item.notes}}" class="schedule-meta">课程说明：{{item.notes}}</text>
+              <view wx:if="{{isCoachView}}" class="booking-count-row">
+                <text class="booking-count-text">学生预约：{{item.studentBookedCount}}人</text>
+                <text class="booking-count-text">教练预约：{{item.coachBookedCount}}/{{item.maxStudents}}</text>
+              </view>
+            </view>
+          </view>
+
+          <view class="schedule-action">
+            <button
+              class="book-btn {{item.canBook ? '' : 'disabled'}}"
+              data-id="{{item.id}}"
+              bindtap="onBookSlot"
+              loading="{{bookingSlotId === item.id}}"
+              disabled="{{!item.canBook || bookingSlotId === item.id}}"
+            >
+              {{item.bookBtnText}}
+            </button>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{!isCoachView || bookedOnly}}" class="section-card">
+      <view class="section-head">
+        <view>
+          <text class="section-title">我的预约</text>
+          <text class="section-subtitle">查看已预约课程和当前上课状态</text>
+        </view>
+      </view>
+
+      <view wx:if="{{!loading && !loadError && bookings.length === 0}}" class="empty-block">
+        <text class="empty-title">还没有预约课程</text>
+        <text class="empty-desc">预约成功后，课程会显示在这里。</text>
+      </view>
+
+      <view wx:if="{{!loadError && bookings.length > 0}}" class="booking-list">
+        <view wx:for="{{bookings}}" wx:key="id" class="booking-card">
+          <view class="booking-top">
+            <view class="date-badge booking-date">
+              <text class="date-badge-day">{{item.monthDay}}</text>
+              <text class="date-badge-week">{{item.weekday}}</text>
+            </view>
+
+            <view class="booking-content">
+              <view class="schedule-row">
+                <text class="schedule-title">{{item.title}}</text>
+                <text class="schedule-status status-{{item.statusClass}}">{{item.statusText}}</text>
+              </view>
+              <text class="schedule-time">{{item.timeRange}}</text>
+              <text class="schedule-meta">教练：{{item.coachName}}</text>
+              <text class="schedule-meta">上课日期：{{item.fullDate}}</text>
+            </view>
+          </view>
+
+          <button
+            wx:if="{{item.canCancel}}"
+            class="cancel-btn"
+            data-id="{{item.id}}"
+            bindtap="onCancelBooking"
+            loading="{{cancelBookingId === item.id}}"
+            disabled="{{cancelBookingId === item.id}}"
+          >
+            取消预约
+          </button>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,30 @@
+page {
+  background: #f7fafc;
+}
+.page {
+  padding: 32rpx;
+  box-sizing: border-box;
+}
+.header {
+  margin-bottom: 32rpx;
+}
+.title {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #1f2933;
+}
+.empty-card {
+  margin-top: 120rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20rpx;
+}
+.empty-emoji {
+  font-size: 88rpx;
+}
+.empty-text {
+  font-size: 28rpx;
+  color: #64748b;
+}

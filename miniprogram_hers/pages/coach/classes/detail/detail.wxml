@@ -1,0 +1,139 @@
+<view class="page">
+  <scroll-view class="page-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+    <view wx:if="{{loading}}" class="loading-state">加载中...</view>
+
+    <view wx:elif="{{loadError}}" class="error-state">
+      <text class="error-text">{{loadError}}</text>
+      <button class="retry-btn" bindtap="loadDetail">点击重试</button>
+    </view>
+
+    <view wx:elif="{{classInfo}}" class="detail-content">
+      <!-- 班级信息卡片 -->
+      <view class="info-card">
+        <view class="card-header">
+          <text class="class-name">{{classInfo.className}}</text>
+          <text class="count-badge">{{classInfo.studentCount}}人</text>
+        </view>
+        <text wx:if="{{classInfo.description}}" class="class-desc">{{classInfo.description}}</text>
+        <view class="info-meta">
+          <text wx:if="{{classInfo.scheduleTime}}" class="meta-item">📅 {{classInfo.scheduleTime}}</text>
+          <text wx:if="{{classInfo.coachName}}" class="meta-item">👤 {{classInfo.coachName}}</text>
+          <text class="meta-item">🕐 {{classInfo.createdAt}}</text>
+        </view>
+        <view wx:if="{{classInfo.isOwn || isAdmin}}" class="info-actions">
+          <view class="act-btn act-edit" bindtap="goEdit">编辑</view>
+          <view class="act-btn act-delete" bindtap="deleteClass">删除</view>
+        </view>
+      </view>
+
+      <!-- 学员列表 -->
+      <view class="student-section">
+        <view class="section-header">
+          <text class="section-title">学员列表（{{students.length}}人）</text>
+          <view wx:if="{{classInfo.isOwn || isAdmin}}" class="add-btn" bindtap="onShowAddModal">+ 添加学员</view>
+        </view>
+
+        <view wx:if="{{students.length === 0}}" class="empty-students">
+          <text class="empty-text">暂无学员</text>
+        </view>
+
+        <view wx:else class="student-list">
+          <view wx:for="{{students}}" wx:key="_id" class="student-card">
+            <view class="student-info">
+              <image class="student-avatar" src="{{item.avatarUrl || '/images/default-avatar.png'}}" mode="aspectFill" />
+              <view class="student-main">
+                <text class="student-name">{{item.name}}</text>
+                <text class="student-phone">{{item.phoneMasked || '****'}}</text>
+              </view>
+              <view class="student-lesson">
+                <text class="lesson-label">剩余课时</text>
+                <text class="lesson-value">{{item.lessonRemaining || 0}}</text>
+              </view>
+            </view>
+            <view wx:if="{{classInfo.isOwn || isAdmin}}" class="student-actions">
+              <view
+                class="s-act s-transfer"
+                data-id="{{item._id}}"
+                data-name="{{item.name}}"
+                catchtap="onShowTransferModal"
+              >移交</view>
+              <view
+                class="s-act s-remove"
+                data-id="{{item._id}}"
+                data-name="{{item.name}}"
+                catchtap="confirmRemoveStudent"
+              >移出</view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="safe-bottom"></view>
+  </scroll-view>
+
+  <!-- ========== 添加学员弹窗 ========== -->
+  <view wx:if="{{showAddModal}}" class="modal-mask" bindtap="onCloseAddModal"></view>
+  <view wx:if="{{showAddModal}}" class="modal-panel">
+    <view class="modal-header">
+      <text class="modal-title">添加学员</text>
+      <view class="modal-close" bindtap="onCloseAddModal">✕</view>
+    </view>
+    <scroll-view class="modal-scroll" scroll-y>
+      <view wx:if="{{addLoading}}" class="modal-loading">加载中...</view>
+      <view wx:elif="{{availableStudents.length === 0}}" class="modal-empty">暂无可添加的学员</view>
+      <view wx:else class="modal-list">
+        <view
+          wx:for="{{availableStudents}}"
+          wx:key="_id"
+          class="modal-item"
+          bindtap="onAddStudent"
+          data-id="{{item._id}}"
+        >
+          <view class="modal-item-info">
+            <text class="modal-item-name">{{item.name}}</text>
+            <text class="modal-item-phone">{{item.phoneMasked || '****'}}</text>
+          </view>
+          <view class="modal-item-add">+ 添加</view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- ========== 移交学员弹窗 ========== -->
+  <view wx:if="{{showTransferModal}}" class="modal-mask" bindtap="onCloseTransferModal"></view>
+  <view wx:if="{{showTransferModal}}" class="modal-panel transfer-panel">
+    <view class="modal-header">
+      <text class="modal-title">移交学员：{{transferStudentName}}</text>
+      <view class="modal-close" bindtap="onCloseTransferModal">✕</view>
+    </view>
+    <scroll-view class="modal-scroll" scroll-y>
+      <view wx:if="{{targetLoading}}" class="modal-loading">加载班级列表...</view>
+      <view wx:elif="{{targetClasses.length === 0}}" class="modal-empty">暂无可移交的班级</view>
+      <view wx:else class="transfer-list">
+        <view
+          wx:for="{{targetClasses}}"
+          wx:key="_id"
+          class="transfer-item {{selectedTargetClassId === item._id ? 'selected' : ''}}"
+          bindtap="onSelectTargetClass"
+          data-id="{{item._id}}"
+        >
+          <view class="transfer-item-info">
+            <text class="transfer-item-name">{{item.className}}</text>
+            <text class="transfer-item-coach">👤 {{item.coachName}} · {{item.studentCount}}人</text>
+          </view>
+          <view wx:if="{{selectedTargetClassId === item._id}}" class="transfer-check">✓</view>
+        </view>
+      </view>
+    </scroll-view>
+    <view class="modal-footer">
+      <button class="m-btn m-cancel" bindtap="onCloseTransferModal">取消</button>
+      <button
+        class="m-btn m-confirm"
+        bindtap="onConfirmTransfer"
+        loading="{{transferring}}"
+        disabled="{{transferring}}"
+      >发送请求</button>
+    </view>
+  </view>
+</view>

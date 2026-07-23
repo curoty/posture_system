@@ -53,3 +53,5 @@ target/
 # ── WeChat miniprogram project.private.config.json ──
 # 含个人开发者设置，不提交
 project.private.config.json
+样本.txt
+.claude

@@ -478,6 +478,29 @@ page {
   padding-top: 10rpx;
 }
 
+.smart-coach-desc {
+  font-size: 26rpx;
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 24rpx;
+}
+
+.smart-coach-content .action-btn-group {
+  justify-content: center;
+}
+
+.smart-coach-content .action-btn.primary {
+  background: #35c66b;
+  color: #fff;
+  padding: 18rpx 60rpx;
+  border-radius: 40rpx;
+}
+
+.smart-coach-content .action-btn-text {
+  font-size: 28rpx;
+  font-weight: 500;
+}
+
 .ble-status {
   display: flex;
   align-items: center;

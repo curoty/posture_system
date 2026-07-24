@@ -231,7 +231,8 @@
       </view>
 
       <view class="actions">
-        <button class="btn primary" loading="{{analyzing}}" bindtap="onTapAnalyze">分析动作</button>
+        <button class="btn primary" loading="{{collecting}}" bindtap="onTapCollectData">采集数据</button>
+        <button class="btn secondary" loading="{{analyzing}}" bindtap="onTapAnalyzeCollected" disabled="{{!hasCollectedData}}">分析结果</button>
         <button class="btn secondary" loading="{{saving}}" bindtap="onTapSaveCollectedData" disabled="{{!hasCollectedData}}">保存数据</button>
       </view>
       <navigator class="list-link" wx:if="{{canSaveTrainingSample}}" url="/pages/coach/sensor/samples/list/list">查看样本列表</navigator>

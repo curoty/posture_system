@@ -2728,9 +2728,9 @@ Page({
       });
 
       wx.showToast({
-        title: "采集成功，请点分析动作",
-        icon: "none",
-        duration: 3000,
+        title: `采集完成，共 ${frames.length} 帧`,
+        icon: "success",
+        duration: 2000,
       });
       this.setData({
         latestAnalyzeScore: "",
@@ -2758,6 +2758,54 @@ Page({
       });
     } finally {
       this.setData({ collecting: false });
+    }
+  },
+
+  async onTapAnalyzeCollected() {
+    if (this.data.analyzing || this.data.accessDenied || !this.data.hasCollectedData) {
+      return;
+    }
+    const frames = this._lastFrames;
+    if (!frames || !frames.length) {
+      wx.showToast({ title: "请先采集数据", icon: "none" });
+      return;
+    }
+
+    const sessionId = String(this.data.sessionId || "").trim();
+    const userId = this.resolveTargetUserId();
+    const actionType = this.getCurrentActionTypeValue();
+    const sourceType = this._lastFrameSourceType || this.getCurrentSourceTypeValue();
+
+    this.setData({
+      analyzing: true,
+      errorTip: "",
+      lastAnalyzeResult: "",
+      latestAnalyzeScore: 0,
+      latestAnalyzeLevel: "-",
+    });
+
+    try {
+      const analyzeResult = await this.runAnalyzeWithFrames({
+        frames,
+        userId,
+        actionType,
+        sessionId,
+        sourceType,
+        silent: false,
+      });
+      // runAnalyzeWithFrames already updates data fields via its internal logic
+      if (!analyzeResult || analyzeResult.success === false) {
+        throw new Error(String(analyzeResult && analyzeResult.message ? analyzeResult.message : "analyze_failed"));
+      }
+      wx.showToast({ title: "分析完成", icon: "success" });
+    } catch (error) {
+      const message = extractErrorMessage(error) || "analyze_failed";
+      this.setData({
+        errorTip: `分析失败：${message}`,
+      });
+      wx.showToast({ title: "分析失败", icon: "none" });
+    } finally {
+      this.setData({ analyzing: false });
     }
   },
 

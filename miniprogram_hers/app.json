@@ -25,6 +25,7 @@
     "pages/coach/sensor/samples/list/list",
     "pages/coach/qrcode/qrcode",
     "pages/coach/inference-test/inference-test",
+    "pages/coach/smart-coach/smart-coach",
     "pages/coach/inference/history/history",
     "pages/coach/predict-result/result",
     "pages/coach/activities/list/list",

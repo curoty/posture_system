@@ -789,6 +789,12 @@ Page({
     });
   },
 
+  goToSmartCoach() {
+    wx.navigateTo({
+      url: "/pages/coach/smart-coach/smart-coach",
+    });
+  },
+
   goToInvitation() {
     wx.navigateTo({
       url: "/pages/coach/invitation/invitation",

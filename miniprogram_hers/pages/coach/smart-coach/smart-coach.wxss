@@ -1,0 +1,59 @@
+.page { padding: 20rpx; background: #f5f5f5; min-height: 100vh; }
+.card { background: #fff; border-radius: 16rpx; padding: 30rpx; margin-bottom: 20rpx; box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.06); }
+
+/* Status */
+.status-row { display: flex; gap: 16rpx; align-items: center; flex-wrap: wrap; }
+.status-tag { padding: 6rpx 20rpx; border-radius: 20rpx; font-size: 24rpx; background: #f0f0f0; color: #999; }
+.status-tag.ok { background: #e8f5e9; color: #2e7d32; }
+.status-tag.idle { background: #f5f5f5; color: #999; }
+.status-tag.info { background: #e3f2fd; color: #1565c0; }
+
+/* Fields */
+.field { margin-bottom: 24rpx; }
+.label { display: block; font-size: 28rpx; color: #333; margin-bottom: 12rpx; font-weight: 500; }
+.picker-value { padding: 20rpx; border: 1rpx solid #ddd; border-radius: 12rpx; font-size: 28rpx; color: #333; }
+
+/* WiFi */
+.wifi-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16rpx; }
+.wifi-title { font-size: 28rpx; font-weight: 500; }
+.wifi-tag { padding: 4rpx 16rpx; border-radius: 12rpx; font-size: 22rpx; }
+.wifi-tag.ok { background: #e8f5e9; color: #2e7d32; }
+.wifi-tag.idle { background: #f5f5f5; color: #999; }
+.wifi-field { margin-bottom: 16rpx; }
+.wifi-label { display: block; font-size: 24rpx; color: #666; margin-bottom: 8rpx; }
+.wifi-input { padding: 16rpx 20rpx; border: 1rpx solid #ddd; border-radius: 10rpx; font-size: 26rpx; width: 100%; box-sizing: border-box; }
+.wifi-btn { width: 100%; margin-top: 8rpx; }
+.hint { font-size: 22rpx; color: #999; margin-top: 8rpx; }
+
+/* Action */
+.action-section { margin-top: 16rpx; }
+.big-btn { width: 100%; height: 88rpx; font-size: 32rpx; border-radius: 44rpx; }
+.btn { padding: 20rpx 40rpx; border-radius: 12rpx; font-size: 28rpx; text-align: center; }
+.btn.primary { background: #35C66B; color: #fff; border: none; }
+.btn.primary[disabled] { background: #c8e6c9; }
+
+/* Result */
+.result-card { text-align: center; }
+.result-head { margin-bottom: 20rpx; }
+.result-title { font-size: 28rpx; color: #666; }
+.result-action-label { font-size: 32rpx; color: #333; font-weight: 500; margin-left: 12rpx; }
+.score-ring { margin: 30rpx 0; }
+.score-value { font-size: 96rpx; font-weight: 700; color: #35C66B; }
+.score-unit { font-size: 36rpx; color: #35C66B; margin-left: 8rpx; }
+.level-text { font-size: 36rpx; font-weight: 500; margin: 16rpx 0; }
+.level-excellent { color: #2e7d32; }
+.level-good { color: #35C66B; }
+.level-mid { color: #ff9800; }
+.level-fail { color: #f44336; }
+.confidence-text { font-size: 24rpx; color: #999; margin-bottom: 24rpx; }
+
+.result-detail { background: #f9f9f9; border-radius: 12rpx; padding: 20rpx; margin: 20rpx 0; text-align: left; }
+.detail-label { font-size: 24rpx; color: #666; display: block; margin-bottom: 8rpx; }
+.detail-text { font-size: 26rpx; color: #333; line-height: 1.6; }
+
+.result-pills { display: flex; gap: 12rpx; justify-content: center; flex-wrap: wrap; margin-top: 20rpx; }
+.pill { padding: 6rpx 20rpx; border-radius: 20rpx; background: #f0f0f0; font-size: 22rpx; color: #666; }
+
+/* Error */
+.error-card { background: #fff3f3; }
+.error { color: #f44336; font-size: 26rpx; }

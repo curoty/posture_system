@@ -71,6 +71,12 @@
             </view>
             <text class="feature-text">训练报告</text>
           </view>
+          <view class="feature-card" bindtap="goToSmartCoach">
+            <view class="feature-icon feature-purple">
+              <image src="/images/icons/bell-outline.svg" mode="aspectFit" />
+            </view>
+            <text class="feature-text">智能教练</text>
+          </view>
           <view class="feature-card" bindtap="onTapSensorDebug">
             <view class="feature-icon feature-purple">
               <image src="/images/icons/profile-course.svg" mode="aspectFit" />
@@ -128,31 +134,17 @@
 
       <view class="section-card smart-coach-card">
         <view class="section-head">
-          <text class="section-title">智能教练</text>
+          <text class="section-title">智能教练 · 实时分析</text>
+          <text class="section-more" bindtap="goToSmartCoach">开始分析 ></text>
         </view>
         <view class="smart-coach-content">
-          <view class="ble-status">
-            <view class="ble-dot {{ deviceConnected ? 'connected' : '' }}"></view>
-            <text class="ble-text">{{ deviceConnected ? (transportMode === 'wifi' ? 'WiFi已连接' : '蓝牙已连接') : (transportMode === 'wifi' ? 'WiFi未连接' : '蓝牙未连接') }}</text>
-            <view class="transport-switch" bindtap="onToggleTransport">
-              <text class="transport-switch-text">{{ transportMode === 'wifi' ? 'WiFi' : '蓝牙' }}</text>
-            </view>
+          <view class="smart-coach-desc">
+            <text>连接 WiFi 传感器，实时采集 5 节点 IMU 数据，AI 自动识别动作并评分。</text>
           </view>
           <view class="action-btn-group">
-            <view class="action-btn {{ analyzing ? 'active' : '' }}" bindtap="onSmartCoachAction">
-              <text class="action-btn-text">{{ analyzing ? '停止分析' : '开始分析' }}</text>
+            <view class="action-btn primary" bindtap="goToSmartCoach">
+              <text class="action-btn-text">进入实时分析</text>
             </view>
-            <view class="action-btn secondary" bindtap="onSmartCoachVoice" wx:if="{{latestAnalyzeScore > 0}}">
-              <text class="action-btn-text">语音播报</text>
-            </view>
-          </view>
-          <view class="result-area" wx:if="{{latestAnalyzeScore > 0}}">
-            <view class="score-display">
-              <text class="score-value">{{latestAnalyzeScore}}</text>
-              <text class="score-unit">分</text>
-            </view>
-            <text class="level-text">等级：{{latestAnalyzeLevel}}</text>
-            <text class="tip-text">{{weightShiftTip}}</text>
           </view>
         </view>
       </view>

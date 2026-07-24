@@ -1,0 +1,71 @@
+<view class="page">
+  <view class="card status-card">
+    <view class="status-row">
+      <view class="status-tag {{wifiConnected ? 'ok' : 'idle'}}">WiFi {{wifiConnected ? '已连接' : '未连接'}}</view>
+      <view class="status-tag {{hasResult ? 'ok' : 'idle'}}">分析{{hasResult ? '已完成' : '未执行'}}</view>
+      <view class="status-tag info" wx:if="{{frameCount > 0}}">{{frameCount}}帧</view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="field">
+      <text class="label">动作类型</text>
+      <picker mode="selector" range="{{actionTypeOptions}}" range-key="label" value="{{actionTypeIndex}}" bindchange="onChangeActionType">
+        <view class="picker-value">{{actionTypeOptions[actionTypeIndex].label}}</view>
+      </picker>
+    </view>
+
+    <view class="field wifi-block">
+      <view class="wifi-header">
+        <text class="wifi-title">WiFi 连接配置</text>
+        <view class="wifi-tag {{wifiConnected ? 'ok' : 'idle'}}">{{wifiStatusText}}</view>
+      </view>
+      <view class="wifi-field" wx:if="{{!wifiConnected}}">
+        <text class="wifi-label">设备地址</text>
+        <input class="wifi-input" placeholder="例如：192.168.1.100" value="{{wifiHost}}" bindinput="onWifiHostInput" />
+      </view>
+      <view class="wifi-field" wx:if="{{!wifiConnected}}">
+        <text class="wifi-label">端口</text>
+        <input class="wifi-input" type="number" placeholder="8080" value="{{wifiPort}}" bindinput="onWifiPortInput" />
+      </view>
+      <button class="btn wifi-btn" loading="{{wifiTesting}}" bindtap="onTapWifiConnect">
+        {{wifiConnected ? '断开连接' : '连接WiFi设备'}}
+      </button>
+      <view class="hint" wx:if="{{!wifiConnected}}">手机和传感器需在同一 WiFi 网络。</view>
+    </view>
+
+    <view class="action-section">
+      <button class="btn primary big-btn" loading="{{analyzing}}" disabled="{{!wifiConnected && collectedFrames === 0}}" bindtap="onTapStartAnalysis">
+        {{analyzing ? '分析中...' : (hasResult ? '重新分析' : '开始分析')}}
+      </button>
+    </view>
+  </view>
+
+  <view class="card result-card" wx:if="{{hasResult}}">
+    <view class="result-head">
+      <text class="result-title">分析结果</text>
+      <text class="result-action-label">{{actionName}}</text>
+    </view>
+    <view class="score-ring">
+      <text class="score-value">{{qualityScore}}</text>
+      <text class="score-unit">分</text>
+    </view>
+    <view class="level-text level-{{qualityLevelClass}}">{{qualityLevel}}</view>
+    <view class="confidence-text">置信度：{{confidence}}%</view>
+
+    <view class="result-detail" wx:if="{{advice}}">
+      <text class="detail-label">教练建议</text>
+      <text class="detail-text">{{advice}}</text>
+    </view>
+
+    <view class="result-pills">
+      <view class="pill">帧数：{{frameCount}}</view>
+      <view class="pill">时长：{{durationSeconds}}s</view>
+      <view class="pill">节点：{{validNodes}}/5</view>
+    </view>
+  </view>
+
+  <view class="card error-card" wx:if="{{errorTip}}">
+    <view class="error">{{errorTip}}</view>
+  </view>
+</view>

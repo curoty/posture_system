@@ -21,6 +21,7 @@ const SENSOR_ROLES = [
   "right_wrist",
   "left_knee",
   "right_knee",
+  "waist",
   "left_foot",
   "right_foot",
 ];
@@ -62,6 +63,7 @@ const round2 = (v) => Math.round(Number(v || 0) * 100) / 100;
 
 const ROLE_SOURCE_ALIAS = {
   head: ["head", "host", "main", "master", "helmet", "\u4e3b\u673a"],
+  waist: ["waist", "lumbar", "core", "hip", "body", "torso"],
   left_wrist: ["leftwrist", "left_wrist", "lwrist", "left_hand", "lefthand"],
   right_wrist: ["rightwrist", "right_wrist", "rwrist", "right_hand", "righthand"],
   left_foot: ["leftfoot", "left_foot", "lfoot", "left_ankle", "leftankle"],

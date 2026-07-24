@@ -1,5 +1,5 @@
-const { collectRealDeviceFrames } = require("../../utils/device-sensor-adapter");
-const { analyzeSensorSession } = require("../../utils/sensor-model");
+const { collectRealDeviceFrames } = require("../../../utils/device-sensor-adapter");
+const { analyzeSensorSession } = require("../../../utils/sensor-model");
 
 const ACTION_TYPE_OPTIONS = [
   { label: "重心转移", value: "weight_shift" },

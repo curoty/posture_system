@@ -8,13 +8,6 @@
   </view>
 
   <view class="card">
-    <view class="field">
-      <text class="label">动作类型</text>
-      <picker mode="selector" range="{{actionTypeOptions}}" range-key="label" value="{{actionTypeIndex}}" bindchange="onChangeActionType">
-        <view class="picker-value">{{actionTypeOptions[actionTypeIndex].label}}</view>
-      </picker>
-    </view>
-
     <view class="field wifi-block">
       <view class="wifi-header">
         <text class="wifi-title">WiFi 连接配置</text>

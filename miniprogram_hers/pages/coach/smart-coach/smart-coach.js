@@ -1,13 +1,6 @@
 const { collectRealDeviceFrames } = require("../../../utils/device-sensor-adapter");
 const { analyzeSensorSession } = require("../../../utils/sensor-model");
 
-const ACTION_TYPE_OPTIONS = [
-  { label: "重心转移", value: "weight_shift" },
-  { label: "基础滑行", value: "basic_skating" },
-  { label: "刹停动作", value: "braking" },
-  { label: "侧蹬收腿", value: "side_push_recover" },
-];
-
 Page({
   data: {
     wifiHost: "",
@@ -15,9 +8,6 @@ Page({
     wifiConnected: false,
     wifiTesting: false,
     wifiStatusText: "未连接",
-
-    actionTypeIndex: 0,
-    actionTypeOptions: ACTION_TYPE_OPTIONS,
 
     analyzing: false,
     hasResult: false,
@@ -45,7 +35,6 @@ Page({
 
   onWifiHostInput(e) { this.setData({ wifiHost: e.detail.value }); },
   onWifiPortInput(e) { this.setData({ wifiPort: e.detail.value }); },
-  onChangeActionType(e) { this.setData({ actionTypeIndex: e.detail.value }); },
 
   async onTapWifiConnect() {
     if (this.data.wifiConnected) {
@@ -92,18 +81,18 @@ Page({
       qualityLevel: "",
     });
 
-    const actionType = ACTION_TYPE_OPTIONS[this.data.actionTypeIndex].value;
     const sessionId = `realtime_${Date.now()}`;
     const userId = this.getCurrentUserId();
 
     try {
       wx.showLoading({ title: "正在采集数据...", mask: true });
 
-      // Collect frames via WiFi
+      // Collect frames via WiFi — action type 由模型自动分类
       const frames = await collectRealDeviceFrames({
         sessionId,
         userId,
-        actionType,
+        actionType: "sensor_session",
+        frameCount: 350,
         frameCount: 350,
         sampleIntervalMs: 20,
         timeoutMs: 30000,
@@ -118,10 +107,10 @@ Page({
       wx.hideLoading();
       wx.showLoading({ title: "AI分析中...", mask: true });
 
-      // Run inference via cloud function
+      // Run inference via cloud function — 动作由模型自动分类
       const result = await analyzeSensorSession({
         sessionId,
-        actionType,
+        actionType: "sensor_session",
         userId,
         frames,
         note: "smart_coach_realtime",
@@ -142,7 +131,7 @@ Page({
       const score = result.quality_score || analysis.overallScore || 0;
       const level = result.quality_level || sensorSession.qualityLevel || "";
       const conf = prediction.confidence || sensorSession.actionConfidence || 0;
-      const actionName = prediction.label_name || sensorSession.predictedAction || actionType;
+      const actionName = prediction.label_name || sensorSession.predictedAction || "—";
       const adviceText = coachFeedback.summary || analysis.summary || "";
 
       const levelClassMap = { "优秀": "excellent", "良好": "good", "中等": "mid", "一般": "mid", "不合格": "fail" };

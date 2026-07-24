@@ -147,7 +147,7 @@ def build_lgb_feature_matrix(
         feature_names: Ordered list of feature column names.
     """
     sequence_config = SequenceConfig.from_dict(checkpoint["sequence_config"])
-    node_order = sequence_config.node_order
+    node_order = sequence_config.resolved_node_order
     label_name_to_id = {
         str(name): int(label_id)
         for name, label_id in checkpoint["label_metadata"]["action_label_to_id"].items()
@@ -283,20 +283,21 @@ def _extract_raw_sequence(
     if not sorted_frames:
         return None
 
-    node_to_index = {node: i for i, node in enumerate(config.node_order)}
+    resolved_order = config.resolved_node_order
+    node_to_index = {node: i for i, node in enumerate(resolved_order)}
     raw = np.full(
-        (len(sorted_frames), len(config.node_order), len(RAW_IMU_CHANNELS)),
+        (len(sorted_frames), len(resolved_order), len(RAW_IMU_CHANNELS)),
         np.nan,
         dtype=np.float32,
     )
-    valid_mask = np.zeros((len(sorted_frames), len(config.node_order)), dtype=bool)
+    valid_mask = np.zeros((len(sorted_frames), len(resolved_order)), dtype=bool)
 
     for fi, frame in enumerate(sorted_frames):
         node_payload = frame.get("p")
         if not isinstance(node_payload, dict):
             continue
         for raw_node, values in node_payload.items():
-            mapped = JSONL_TO_MODEL_NODE_MAPPING.get(str(raw_node))
+            mapped = config.jsonl_to_model_node_mapping.get(str(raw_node))
             if mapped not in node_to_index:
                 continue
             if not isinstance(values, list) or len(values) != len(RAW_IMU_CHANNELS):
@@ -418,13 +419,9 @@ def run_lgb_training(
     output_path.mkdir(parents=True, exist_ok=True)
     device = torch.device(device_name or ("cuda" if torch.cuda.is_available() else "cpu"))
 
-    # --- Load action model ---
-    checkpoint = torch.load(action_model_path, map_location=device, weights_only=False)
-    model_config = ActionModelConfig.from_dict(checkpoint["model_config"])
-    action_model = CNNLSTMAttentionClassifier(model_config)
-    action_model.load_state_dict(checkpoint["model_state_dict"])
-    action_model.to(device)
-    action_model.eval()
+    # --- Load action model (supports both baseline and structured) ---
+    from src.predict import load_action_model as _load_action_model
+    action_model, checkpoint = _load_action_model(action_model_path, device=device)
 
     # --- Load reference library ---
     reference_library = None

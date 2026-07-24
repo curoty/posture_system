@@ -91,6 +91,17 @@ REMOTE_ROLE_CANONICAL_ORDER = [
     "right_foot",
 ]
 
+# 5 节点预设的期望角色 (lower_body_5)
+REMOTE_ROLE_LOWER_BODY_5 = [
+    "waist", "left_knee", "right_knee", "left_foot", "right_foot",
+]
+
+# 按预设名取期望角色集合
+_NODE_PRESET_ROLES: Dict[str, List[str]] = {
+    "full_body_9": REMOTE_ROLE_CANONICAL_ORDER,
+    "lower_body_5": REMOTE_ROLE_LOWER_BODY_5,
+}
+
 SENSOR_ROLES = [
     "head", "left_elbow", "right_elbow", "left_wrist", "right_wrist",
     "left_knee", "right_knee", "waist", "left_foot", "right_foot",
@@ -208,9 +219,12 @@ def _normalize_remote_role(raw_role: Any) -> Optional[str]:
     return REMOTE_ROLE_TO_BASELINE_NODE.get(normalized)
 
 
-def _check_nine_node_completeness(frames: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """Require all nine model nodes in at least the configured frame ratio."""
-    required_names = set(REMOTE_ROLE_CANONICAL_ORDER)
+def _check_nine_node_completeness(
+    frames: List[Dict[str, Any]],
+    preset_name: str = "full_body_9",
+) -> Dict[str, Any]:
+    """Require all expected nodes (from preset) in at least the configured frame ratio."""
+    required_names = set(_NODE_PRESET_ROLES.get(preset_name, REMOTE_ROLE_CANONICAL_ORDER))
     required = {_normalize_remote_role(name) for name in required_names}
     total = len(frames)
     complete = 0

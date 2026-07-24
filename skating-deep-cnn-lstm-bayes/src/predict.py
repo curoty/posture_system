@@ -257,7 +257,7 @@ def _extract_lgb_features_inference(
         feature_dict["acc_var_global"] = 0.0
         feature_dict["gyro_var_global"] = 0.0
         feature_dict["jerk_roughness"] = 0.0
-        for ni in range(9):
+        for ni in range(len(node_order)):
             node_name = node_order[ni] if ni < len(node_order) else f"node_{ni}"
             feature_dict[f"node_{node_name}_acc_var"] = 0.0
             feature_dict[f"node_{node_name}_gyro_var"] = 0.0
@@ -326,9 +326,41 @@ def _check_input_validity(sequence: np.ndarray) -> Optional[str]:
     return None
 
 
+def _check_input_stationary(
+    sequence: np.ndarray,
+    num_nodes: int,
+    acc_var_threshold: float = 0.05,
+    gyro_var_threshold: float = 2.0,
+) -> Optional[str]:
+    """Detect if the input is a stationary/standing signal (no motion).
+
+    Inspects the raw IMU sequence variance across all nodes.  Standing
+    produces extremely low variance, easily separable from any motion.
+
+    Args:
+        sequence: [T, N, 6] raw IMU (before normalization).
+        num_nodes: Number of sensor nodes in the sequence.
+        acc_var_threshold: Max allowed mean acc variance for stationary.
+        gyro_var_threshold: Max allowed mean gyro variance for stationary.
+
+    Returns:
+        ``"stationary_signal"`` if stationary, ``None`` otherwise.
+    """
+    if sequence.ndim != 3 or sequence.shape[1] != num_nodes:
+        return None
+    acc = sequence[:, :, 0:3]
+    gyro = sequence[:, :, 3:6]
+    acc_var = float(np.mean(np.var(acc, axis=0)))
+    gyro_var = float(np.mean(np.var(gyro, axis=0)))
+    if acc_var < acc_var_threshold and gyro_var < gyro_var_threshold:
+        return "stationary_signal"
+    return None
+
+
 def _check_node_completeness(
     record: Dict[str, Any],
     min_complete_ratio: float = 0.7,
+    expected_nodes: Optional[set] = None,
 ) -> Optional[str]:
     """Check that enough nodes have non-zero data in the raw record.
 
@@ -341,6 +373,8 @@ def _check_node_completeness(
         min_complete_ratio: Minimum fraction of frames that must contain
             at least ``min_complete_ratio`` of the expected nodes with
             non-zero data.
+        expected_nodes: Set of expected JSONL-side node names.  If None,
+            defaults to ``full_body_9`` keys for backward compatibility.
 
     Returns:
         ``None`` if the record passes the check, otherwise a reason string.
@@ -349,8 +383,10 @@ def _check_node_completeness(
     if not isinstance(frames, list) or not frames:
         return "empty_frames"
 
-    from src.jsonl_sequence_dataset import JSONL_TO_MODEL_NODE_MAPPING
-    expected_nodes = set(JSONL_TO_MODEL_NODE_MAPPING.keys())
+    if expected_nodes is None:
+        from src.jsonl_sequence_dataset import NODE_PRESETS
+        expected_nodes = set(NODE_PRESETS["full_body_9"].jsonl_keys)
+
     min_nodes_per_frame = max(1, int(len(expected_nodes) * min_complete_ratio))
 
     complete_frame_count = 0
@@ -429,8 +465,17 @@ def predict_record(
     if input_issue is not None:
         return {"success": False, "reason": input_issue}
 
+    # Stationary signal check (standing baseline)
+    stationary_issue = _check_input_stationary(
+        sequence.reshape(1, len(node_order), -1)[0] if sequence.ndim == 2
+        else sequence,
+        num_nodes=len(node_order),
+    )
+
     # Node completeness check (defense-in-depth)
-    node_issue = _check_node_completeness(record)
+    seq_config = SequenceConfig.from_dict(checkpoint["sequence_config"])
+    expected_nodes = set(seq_config.node_preset.jsonl_keys)
+    node_issue = _check_node_completeness(record, expected_nodes=expected_nodes)
     if node_issue is not None:
         return {"success": False, "reason": node_issue}
 
@@ -492,6 +537,13 @@ def predict_record(
         quality_skip_reason = (
             "embedding_collapse" if embedding_collapsed else "low_action_confidence"
         )
+    elif stationary_issue is not None:
+        quality_skip_reason = stationary_issue
+
+    # --- Standing action: skip quality scoring ---
+    if action_success and action_name in ("standing", "stand", "static"):
+        action_success = False
+        quality_skip_reason = "standing_no_quality"
 
     if action_success:
         # Try LightGBM first
@@ -643,7 +695,7 @@ def _predict_quality_lgb(
         action_labels=action_labels,
         duration_seconds=duration_seconds,
         missing_node_ratio=missing_node_ratio,
-        raw_sequence=raw_sequence if raw_sequence is not None else np.zeros((1, 9, 6), dtype=np.float32),
+        raw_sequence=raw_sequence if raw_sequence is not None else np.zeros((1, len(node_order), 6), dtype=np.float32),
         node_order=node_order,
         reference_library=reference_library,
         feature_names=feature_names,

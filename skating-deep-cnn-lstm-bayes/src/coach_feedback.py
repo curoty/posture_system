@@ -13,6 +13,10 @@ from typing import Any, Dict, List
 # ---------------------------------------------------------------------------
 DURATION_RANGES: Dict[str, tuple[float, float]] = {
     "weight_shift": (3.0, 6.0),
+    "basic_skating": (3.0, 8.0),
+    "braking": (1.5, 4.0),
+    "side_push_recover": (2.0, 5.0),
+    "standing": (3.0, 10.0),  # standing baseline 不评分, 仅占位
 }
 
 DEFAULT_DURATION_RANGE: tuple[float, float] = (2.0, 8.0)

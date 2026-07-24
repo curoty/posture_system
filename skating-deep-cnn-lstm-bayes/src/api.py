@@ -130,6 +130,11 @@ class DeepInferenceService:
             except Exception:
                 pass
 
+    def _get_node_preset(self) -> str:
+        """Return the node preset name from the loaded checkpoint."""
+        seq_cfg = self.checkpoint.get("sequence_config", {})
+        return str(seq_cfg.get("node_preset_name", "full_body_9"))
+
     def predict_json(self, request: PredictJsonRequest) -> Dict[str, Any]:
         records = _build_records(request)
         results: List[Dict[str, Any]] = []
@@ -158,7 +163,7 @@ class DeepInferenceService:
                 "samples": len(results),
                 "window_size": None,
                 "step_size": None,
-                "sensor_mode": "9node-json",
+                "sensor_mode": f"{self._get_node_preset()}-json",
                 "quality_model": "LightGBM" if self.lgb_available else ("GaussianNB" if self.quality_model_path else "none"),
                 "results": results,
                 "summary": _build_summary(results),
@@ -224,7 +229,7 @@ def health() -> Dict[str, Any]:
         "lgb_quality_model_path": str(LGB_QUALITY_MODEL_PATH) if LGB_QUALITY_MODEL_PATH.exists() else None,
         "quality_model_path": str(QUALITY_MODEL_PATH),
         "quality_model_type": "LightGBM" if (active_service and active_service.lgb_available) else "GaussianNB",
-        "sensor_mode": "9node-json",
+        "sensor_mode": f"{self._get_node_preset()}-json",
         "version": "2.0.0",
         "robustness_gates": {
             "confidence_threshold": CONFIDENCE_THRESHOLD,
@@ -277,7 +282,7 @@ def predict_by_path(request: PredictByPathRequest) -> Dict[str, Any]:
                 "samples": result.get("samples", 0),
                 "window_size": None,
                 "step_size": None,
-                "sensor_mode": "9node-json",
+                "sensor_mode": f"{active_service._get_node_preset()}-json",
                 "quality_model": "LightGBM" if active_service.lgb_available else "GaussianNB",
                 "results": [
                     _adapt_result_for_spring(r)

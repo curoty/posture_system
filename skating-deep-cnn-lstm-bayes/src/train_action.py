@@ -136,7 +136,8 @@ def _evaluate_model(
 def run_action_training(
     jsonl_path: str | Path,
     output_dir: str | Path,
-    sequence_length: int = 180,
+    sequence_length: int = 350,
+    node_preset: str = "full_body_9",
     use_derived_channels: bool = False,
     use_attention: bool = True,
     batch_size: int = 32,
@@ -156,6 +157,7 @@ def run_action_training(
 
     sequence_config = SequenceConfig(
         sequence_length=sequence_length,
+        node_preset_name=node_preset,
         derived_channels=("acc_mag", "gyro_mag") if use_derived_channels else (),
     )
     X, y, metadata, label_name_to_id, label_id_to_name, dataset_stats = load_sequence_dataset_from_jsonl(
@@ -310,7 +312,9 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Train CNN-LSTM action classifier from JSONL.")
     parser.add_argument("--jsonl", required=True, help="Path to baseline-compatible JSONL samples.")
     parser.add_argument("--output-dir", required=True, help="Directory for deep model artifacts.")
-    parser.add_argument("--sequence-length", type=int, default=180)
+    parser.add_argument("--sequence-length", type=int, default=350, help="Target sequence length (350 = 7s @ 50fps)")
+    parser.add_argument("--node-preset", default="full_body_9", choices=["full_body_9", "lower_body_5"],
+                        help="Node preset: full_body_9 (9 nodes) or lower_body_5 (5 nodes)")
     parser.add_argument("--use-derived-channels", action="store_true", help="Append acc_mag and gyro_mag channels.")
     parser.add_argument("--disable-attention", action="store_true")
     parser.add_argument("--batch-size", type=int, default=32)
@@ -329,6 +333,7 @@ def main() -> int:
             jsonl_path=args.jsonl,
             output_dir=args.output_dir,
             sequence_length=args.sequence_length,
+            node_preset=args.node_preset,
             use_derived_channels=bool(args.use_derived_channels),
             use_attention=not bool(args.disable_attention),
             batch_size=args.batch_size,

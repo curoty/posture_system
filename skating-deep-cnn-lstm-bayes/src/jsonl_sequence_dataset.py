@@ -1,9 +1,19 @@
-"""JSONL sequence adapter for 9-node skating IMU samples."""
+"""JSONL sequence adapter for multi-node skating IMU samples.
+
+支持两种节点预设 (NodePreset):
+  - full_body_9: 全身 9 节点 (向后兼容)
+  - lower_body_5: 下肢 5 节点 (当前固件, waist+2膝+2踝)
+
+SequenceConfig 通过 node_preset_name 自动选择节点配置,
+无需在代码中硬编码 9 或 5。
+
+旧 checkpoint (无 node_preset_name 字段) 默认按 full_body_9 解析。
+"""
 
 from __future__ import annotations
 
 import json
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
@@ -13,41 +23,60 @@ import torch
 from torch.utils.data import Dataset
 
 
-JSONL_EXPECTED_NODE_ORDER = (
-    "head",
-    "left_elbow",
-    "right_elbow",
-    "left_wrist",
-    "right_wrist",
-    "left_knee",
-    "right_knee",
-    "left_foot",
-    "right_foot",
-)
+# ---------------------------------------------------------------------------
+# Node presets
+# ---------------------------------------------------------------------------
 
-BASELINE_NODE_ORDER = (
-    "head",
-    "l_elbow",
-    "l_knee",
-    "l_skate",
-    "l_wrist",
-    "r_elbow",
-    "r_knee",
-    "r_skate",
-    "r_wrist",
-)
 
-JSONL_TO_MODEL_NODE_MAPPING = {
-    "head": "head",
-    "left_elbow": "l_elbow",
-    "right_elbow": "r_elbow",
-    "left_wrist": "l_wrist",
-    "right_wrist": "r_wrist",
-    "left_knee": "l_knee",
-    "right_knee": "r_knee",
-    "left_foot": "l_skate",
-    "right_foot": "r_skate",
+@dataclass(frozen=True)
+class NodePreset:
+    """节点预设: 定义 JSONL 键名到模型内部节点名的映射。"""
+    name: str
+    jsonl_keys: Tuple[str, ...]          # 数据存档/云函数侧的键名
+    model_node_order: Tuple[str, ...]    # 模型内部节点名（决定张量通道顺序）
+    jsonl_to_model: Dict[str, str]       # jsonl_keys → model_node_order 映射
+    min_valid_ratio: float = 0.8         # 最少有效节点比例
+
+    @property
+    def num_nodes(self) -> int:
+        return len(self.model_node_order)
+
+    @property
+    def min_valid_nodes(self) -> int:
+        return max(1, int(self.num_nodes * self.min_valid_ratio))
+
+
+NODE_PRESETS: Dict[str, NodePreset] = {
+    "full_body_9": NodePreset(
+        name="full_body_9",
+        jsonl_keys=("head", "left_elbow", "right_elbow", "left_wrist", "right_wrist",
+                    "left_knee", "right_knee", "left_foot", "right_foot"),
+        model_node_order=("head", "l_elbow", "l_knee", "l_skate", "l_wrist",
+                          "r_elbow", "r_knee", "r_skate", "r_wrist"),
+        jsonl_to_model={
+            "head": "head", "left_elbow": "l_elbow", "right_elbow": "r_elbow",
+            "left_wrist": "l_wrist", "right_wrist": "r_wrist",
+            "left_knee": "l_knee", "right_knee": "r_knee",
+            "left_foot": "l_skate", "right_foot": "r_skate",
+        },
+        min_valid_ratio=0.67,  # 9*0.67≈6, 等价旧 min_valid_nodes=6
+    ),
+    "lower_body_5": NodePreset(
+        name="lower_body_5",
+        jsonl_keys=("waist", "left_knee", "right_knee", "left_foot", "right_foot"),
+        model_node_order=("waist", "l_knee", "r_knee", "l_skate", "r_skate"),
+        jsonl_to_model={
+            "waist": "waist",
+            "left_knee": "l_knee", "right_knee": "r_knee",
+            "left_foot": "l_skate", "right_foot": "r_skate",
+        },
+        min_valid_ratio=0.8,  # 5*0.8=4, 允许丢 1 个节点
+    ),
 }
+
+# 向后兼容: 保留模块级常量, 作为 full_body_9 预设的来源
+BASELINE_NODE_ORDER: Tuple[str, ...] = NODE_PRESETS["full_body_9"].model_node_order
+JSONL_TO_MODEL_NODE_MAPPING: Dict[str, str] = NODE_PRESETS["full_body_9"].jsonl_to_model
 
 RAW_IMU_CHANNELS = ("ax", "ay", "az", "gx", "gy", "gz")
 
@@ -62,37 +91,51 @@ _ATTITUDE_CHANNEL_COUNT = 4  # sin(roll), sin(pitch), cos(roll), cos(pitch)
 
 @dataclass(frozen=True)
 class SequenceConfig:
-    sequence_length: int = 180
-    node_order: Tuple[str, ...] = BASELINE_NODE_ORDER
+    """序列配置: 节点预设驱动, 向后兼容 9 节点旧 checkpoint。"""
+    sequence_length: int = 350                     # 新数据 7s @ 50fps = 350 帧
+    node_preset_name: str = "full_body_9"           # 新增: 预设名, 旧 ckpt 缺省 = full_body_9
+    node_order: Tuple[str, ...] = ()                # 空 = 从预设派生; 非空 = 显式覆盖(旧 ckpt)
     raw_channels: Tuple[str, ...] = RAW_IMU_CHANNELS
     derived_channels: Tuple[str, ...] = ()
     missing_fill_value: float = 0.0
-    min_valid_nodes: int = 6
+    min_valid_nodes: int = 0                        # 0 = 从预设的 min_valid_ratio 派生
 
     # --- 去噪 (src/denoise.py) ---
-    # 随 checkpoint 持久化，保证推理端复现训练时的预处理。若训练开了去噪而
-    # 推理没开(或反之)，输入分布会漂移，模型表现会莫名下降且极难排查。
-    #
-    # denoise_spikes: 剔除野值尖刺。默认 False 以保持既有模型行为不变；
-    #   新模型建议开启 —— 实测本项目野值率 0.7%，acc 峰值达 228g(物理不可能)，
-    #   会严重污染 z-score 归一化以及质量模型的方差/jerk 特征。
-    #   去噪必须在姿态解算**之前**，否则野值会被陀螺积分放大。
     denoise_spikes: bool = False
-    # denoise_lowpass_hz: 低通截止频率(Hz)，None = 不做低通。
-    #   实测本项目高频抖动仅占信号幅值 2%，低通收益极小，且有抹掉真实快速
-    #   运动(蹬冰/落冰)的风险，故默认关闭。
     denoise_lowpass_hz: Optional[float] = None
-    # 实际采样率，仅低通滤波需要。本项目实测中位数约 20Hz。
-    sample_rate_hz: float = 20.0
+    sample_rate_hz: float = 50.0                    # 新数据 50fps
+
+    # ------------------------------------------------------------------ #
+    # 后方便:
+    # node_order / min_valid_nodes / jsonl_to_model_node_mapping
+    # 全部从 node_preset_name 和 NodePreset 派生，不再硬编码 9 或 5。
+    # 但 node_order 和 min_valid_nodes 仍作为字段保留(向后兼容)；
+    # 当它们为空/零时自动从预设派生。
+    # ------------------------------------------------------------------ #
+
+    @property
+    def node_preset(self) -> "NodePreset":
+        return NODE_PRESETS.get(self.node_preset_name, NODE_PRESETS["full_body_9"])
+
+    @property
+    def resolved_node_order(self) -> Tuple[str, ...]:
+        if self.node_order:
+            return self.node_order
+        return self.node_preset.model_node_order
+
+    @property
+    def resolved_min_valid_nodes(self) -> int:
+        if self.min_valid_nodes > 0:
+            return self.min_valid_nodes
+        return self.node_preset.min_valid_nodes
+
+    @property
+    def jsonl_to_model_node_mapping(self) -> Dict[str, str]:
+        return self.node_preset.jsonl_to_model
 
     @property
     def channels(self) -> Tuple[str, ...]:
-        """展开后的**逐节点**通道名。
-
-        注意 ``attitude`` 并非单通道 —— 它展开成 4 个 (roll/pitch 的 sin,cos)。
-        因此不能简单地把 derived_channels 拼接进来，否则 input_dim 会算错，
-        导致模型输入维度与实际张量不符。
-        """
+        """展开后的**逐节点**通道名。"""
         expanded: list[str] = list(self.raw_channels)
         for name in self.derived_channels:
             if name == "attitude":
@@ -103,30 +146,44 @@ class SequenceConfig:
 
     @property
     def input_dim(self) -> int:
-        return len(self.node_order) * len(self.channels)
+        return len(self.resolved_node_order) * len(self.channels)
 
     def to_dict(self) -> Dict[str, Any]:
         payload = asdict(self)
-        payload["node_order"] = list(self.node_order)
+        payload["node_order"] = list(self.resolved_node_order)
         payload["raw_channels"] = list(self.raw_channels)
         payload["derived_channels"] = list(self.derived_channels)
         payload["channels"] = list(self.channels)
         payload["input_dim"] = int(self.input_dim)
+        payload["node_preset_name"] = str(self.node_preset_name)
         return payload
 
     @classmethod
     def from_dict(cls, payload: Dict[str, Any]) -> "SequenceConfig":
         lowpass = payload.get("denoise_lowpass_hz")
+
+        # 旧 checkpoint (无 node_preset_name) -> 用 node_order 直接; 新 checkpoint 从预设派生
+        if "node_preset_name" in payload:
+            node_preset_name = str(payload["node_preset_name"])
+            preset = NODE_PRESETS.get(node_preset_name, NODE_PRESETS["full_body_9"])
+            node_order = tuple(str(item) for item in payload.get("node_order", preset.model_node_order))
+            min_valid_nodes = int(payload.get("min_valid_nodes", preset.min_valid_nodes))
+        else:
+            node_preset_name = "full_body_9"
+            node_order = tuple(str(item) for item in payload.get("node_order", BASELINE_NODE_ORDER))
+            min_valid_nodes = int(payload.get("min_valid_nodes", 6))
+
         return cls(
-            sequence_length=int(payload.get("sequence_length", 180)),
-            node_order=tuple(str(item) for item in payload.get("node_order", BASELINE_NODE_ORDER)),
+            sequence_length=int(payload.get("sequence_length", 350)),
+            node_preset_name=node_preset_name,
+            node_order=node_order,
             raw_channels=tuple(str(item) for item in payload.get("raw_channels", RAW_IMU_CHANNELS)),
             derived_channels=tuple(str(item) for item in payload.get("derived_channels", ())),
             missing_fill_value=float(payload.get("missing_fill_value", 0.0)),
-            min_valid_nodes=int(payload.get("min_valid_nodes", 6)),
+            min_valid_nodes=min_valid_nodes,
             denoise_spikes=bool(payload.get("denoise_spikes", False)),
             denoise_lowpass_hz=None if lowpass is None else float(lowpass),
-            sample_rate_hz=float(payload.get("sample_rate_hz", 20.0)),
+            sample_rate_hz=float(payload.get("sample_rate_hz", 50.0)),
         )
 
 
@@ -239,13 +296,14 @@ def convert_record_to_sequence(
     if not sorted_frames:
         return None, None, {"ok": False, "reason": "empty_frames", "action_type": action_type}
 
-    node_to_index = {node: index for index, node in enumerate(config.node_order)}
+    resolved_node_order = config.resolved_node_order
+    node_to_index = {node: index for index, node in enumerate(resolved_node_order)}
     raw_sequence = np.full(
-        (len(sorted_frames), len(config.node_order), len(RAW_IMU_CHANNELS)),
+        (len(sorted_frames), len(resolved_node_order), len(RAW_IMU_CHANNELS)),
         np.nan,
         dtype=np.float32,
     )
-    valid_node_frames = np.zeros((len(sorted_frames), len(config.node_order)), dtype=bool)
+    valid_node_frames = np.zeros((len(sorted_frames), len(resolved_node_order)), dtype=bool)
     timestamps: List[float] = []
     invalid_node_value_length = False
 
@@ -260,7 +318,7 @@ def convert_record_to_sequence(
             continue
 
         for raw_node_name, raw_values in node_payload.items():
-            mapped_node = JSONL_TO_MODEL_NODE_MAPPING.get(str(raw_node_name))
+            mapped_node = config.jsonl_to_model_node_mapping.get(str(raw_node_name))
             if mapped_node not in node_to_index:
                 continue
             if not isinstance(raw_values, list) or len(raw_values) != len(RAW_IMU_CHANNELS):
@@ -274,7 +332,7 @@ def convert_record_to_sequence(
         return None, None, {"ok": False, "reason": "invalid_node_value_length", "action_type": action_type}
 
     valid_nodes = np.sum(np.any(valid_node_frames, axis=0))
-    if int(valid_nodes) < config.min_valid_nodes:
+    if int(valid_nodes) < config.resolved_min_valid_nodes:
         return None, None, {
             "ok": False,
             "reason": "incomplete_nodes",

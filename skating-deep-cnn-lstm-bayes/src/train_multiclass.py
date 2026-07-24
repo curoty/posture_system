@@ -137,13 +137,15 @@ def evaluate(model, loader, device, id_to_name, criterion=None) -> Dict[str, Any
 def run(data_dir: str, arch: str, output_dir: str, use_derived: Sequence[str],
         batch_size: int, max_epochs: int, lr: float, patience: int,
         seed: int, device_name: Optional[str],
+        node_preset: str = "full_body_9", sequence_length: int = 350,
         denoise: bool = False, lowpass_hz: Optional[float] = None) -> Dict[str, Any]:
     set_seed(seed)
     out = Path(output_dir); out.mkdir(parents=True, exist_ok=True)
     device = torch.device(device_name or ("cuda" if torch.cuda.is_available() else "cpu"))
 
     seq_config = SequenceConfig(
-        sequence_length=180,
+        sequence_length=sequence_length,
+        node_preset_name=node_preset,
         derived_channels=tuple(use_derived),
         denoise_spikes=denoise,
         denoise_lowpass_hz=lowpass_hz,
@@ -168,7 +170,7 @@ def run(data_dir: str, arch: str, output_dir: str, use_derived: Sequence[str],
     va_loader = DataLoader(SequenceTensorDataset(X_va, y_va), batch_size=batch_size, shuffle=False)
     te_loader = DataLoader(SequenceTensorDataset(X_te, y_te), batch_size=batch_size, shuffle=False)
 
-    model = build_model(arch, seq_config.input_dim, seq_config.node_order.__len__(),
+    model = build_model(arch, seq_config.input_dim, len(seq_config.resolved_node_order),
                         ch_per_node, num_classes).to(device)
     n_params = sum(p.numel() for p in model.parameters())
     print(f"[model] arch={arch}, params={n_params:,}")
@@ -256,6 +258,10 @@ def main() -> int:
     p.add_argument("--lowpass-hz", type=float, default=None,
                    help="低通截止频率(Hz)。默认不做 —— 实测高频抖动仅占信号2%%，"
                         "低通收益小且可能抹掉真实快速运动")
+    p.add_argument("--node-preset", default="full_body_9", choices=["full_body_9", "lower_body_5"],
+                    help="Node preset: full_body_9 (9 nodes) or lower_body_5 (5 nodes)")
+    p.add_argument("--sequence-length", type=int, default=350,
+                    help="Target sequence length (350 = 7s @ 50fps)")
     p.add_argument("--batch-size", type=int, default=32)
     p.add_argument("--max-epochs", type=int, default=80)
     p.add_argument("--learning-rate", type=float, default=1e-3)
@@ -266,6 +272,7 @@ def main() -> int:
     res = run(args.data_dir, args.arch, args.output_dir, args.derived,
               args.batch_size, args.max_epochs, args.learning_rate,
               args.patience, args.seed, args.device,
+              node_preset=args.node_preset, sequence_length=args.sequence_length,
               denoise=args.denoise, lowpass_hz=args.lowpass_hz)
     print(json.dumps({"arch": res["arch"], "num_params": res["num_params"],
                       "test_macro_f1": res["test"]["macro_f1"],

@@ -267,7 +267,6 @@ def _extract_raw_sequence(
 ) -> Optional[np.ndarray]:
     """Extract raw [T, nodes, 6] sequence from a record for motion-stability stats."""
     from src.jsonl_sequence_dataset import (
-        JSONL_TO_MODEL_NODE_MAPPING,
         RAW_IMU_CHANNELS,
         _fill_nan_vector,
     )

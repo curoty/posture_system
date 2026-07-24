@@ -262,7 +262,8 @@ def _check_nine_node_completeness(
     }
 
 
-def _deep_result_to_analysis(result: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, Any]:
+def _deep_result_to_analysis(result: Dict[str, Any], payload: Dict[str, Any],
+                               preset_name: str = "full_body_9") -> Dict[str, Any]:
     """Translate deep model result into the cloud-function analysis contract."""
     prediction = result.get("prediction") if isinstance(result.get("prediction"), dict) else {}
     policy = result.get("action_success_policy") if isinstance(result.get("action_success_policy"), dict) else {}
@@ -289,7 +290,7 @@ def _deep_result_to_analysis(result: Dict[str, Any], payload: Dict[str, Any]) ->
             "qualityLevel": result.get("quality_level"),
             "qualityScoreSource": result.get("quality_score_source"),
             "topPredictions": result.get("top_predictions") or [],
-            "nodeCompleteness": _check_nine_node_completeness(frames),
+            "nodeCompleteness": _check_nine_node_completeness(frames, preset_name=preset_name),
         },
         "modelVersion": "cnn_lstm_attention_lgb_v3",
         "rawModelResult": result,
@@ -544,6 +545,8 @@ async def log_requests(request, call_next):
 async def health():
     mqtt_status = get_mqtt_status()
     model_ready = inference_service is not None
+    seq_cfg = (inference_service or {}).get("checkpoint", {}).get("sequence_config", {})
+    sensor_mode = str(seq_cfg.get("node_preset_name", "full_body_9")) + "-json"
     return {
         "success": model_ready,
         "message": "service is running" if model_ready else (inference_error or "Deep model not loaded"),
@@ -552,7 +555,7 @@ async def health():
         "deep_model_error": inference_error,
         "action_model_path": str(DEEP_ACTION_MODEL_PATH),
         "quality_model_path": str(DEEP_LGB_QUALITY_MODEL_PATH) if DEEP_LGB_QUALITY_MODEL_PATH.exists() else None,
-        "sensor_mode": "9node",
+        "sensor_mode": sensor_mode,
         "device_connected": mqtt_status["device_online"],
         "mqtt": mqtt_status,
     }
@@ -782,7 +785,9 @@ async def infer_for_cloud_function(request: SensorRemoteInferRequest):
 
     try:
         payload = request.input or {}
-        completeness = _check_nine_node_completeness(payload.get("frames") or [])
+        seq_cfg = inference_service.get("checkpoint", {}).get("sequence_config", {})
+        preset = str(seq_cfg.get("node_preset_name", "full_body_9"))
+        completeness = _check_nine_node_completeness(payload.get("frames") or [], preset_name=preset)
         if not completeness["ok"]:
             raise ValueError(
                 "node_incomplete: complete frame ratio "
@@ -801,7 +806,7 @@ async def infer_for_cloud_function(request: SensorRemoteInferRequest):
             top_margin_threshold=TOP_MARGIN_THRESHOLD,
             embedding_collapse_threshold=EMBEDDING_COLLAPSE_THRESHOLD,
         )
-        analysis = _deep_result_to_analysis(result, payload)
+        analysis = _deep_result_to_analysis(result, payload, preset_name=preset)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:

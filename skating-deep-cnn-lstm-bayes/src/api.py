@@ -229,7 +229,7 @@ def health() -> Dict[str, Any]:
         "lgb_quality_model_path": str(LGB_QUALITY_MODEL_PATH) if LGB_QUALITY_MODEL_PATH.exists() else None,
         "quality_model_path": str(QUALITY_MODEL_PATH),
         "quality_model_type": "LightGBM" if (active_service and active_service.lgb_available) else "GaussianNB",
-        "sensor_mode": f"{self._get_node_preset()}-json",
+        "sensor_mode": f"{active_service._get_node_preset()}-json" if active_service else "unknown-json",
         "version": "2.0.0",
         "robustness_gates": {
             "confidence_threshold": CONFIDENCE_THRESHOLD,

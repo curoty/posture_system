@@ -805,7 +805,6 @@ def _extract_raw_sequence_inference(
 ) -> Optional[np.ndarray]:
     """Extract raw per-node IMU sequence for motion-stability feature calculation."""
     from src.jsonl_sequence_dataset import (
-        JSONL_TO_MODEL_NODE_MAPPING,
         RAW_IMU_CHANNELS,
         _fill_nan_vector,
     )
@@ -820,9 +819,11 @@ def _extract_raw_sequence_inference(
     if not sorted_frames:
         return None
 
-    node_to_index = {node: i for i, node in enumerate(config.node_order)}
+    resolved_order = config.resolved_node_order
+    node_mapping = config.jsonl_to_model_node_mapping
+    node_to_index = {node: i for i, node in enumerate(resolved_order)}
     raw = np.full(
-        (len(sorted_frames), len(config.node_order), len(RAW_IMU_CHANNELS)),
+        (len(sorted_frames), len(resolved_order), len(RAW_IMU_CHANNELS)),
         np.nan, dtype=np.float32,
     )
 
@@ -831,7 +832,7 @@ def _extract_raw_sequence_inference(
         if not isinstance(node_payload, dict):
             continue
         for raw_node, values in node_payload.items():
-            mapped = JSONL_TO_MODEL_NODE_MAPPING.get(str(raw_node))
+            mapped = node_mapping.get(str(raw_node))
             if mapped not in node_to_index:
                 continue
             if not isinstance(values, list) or len(values) != len(RAW_IMU_CHANNELS):

@@ -1,5 +1,20 @@
 """HTTP API for CNN-LSTM action model + LightGBM quality regressor.
 
+⚠️ 已废弃 (DEPRECATED) — 2026-07-24
+
+此文件的功能已融合到 ``sensor_api.py``，``sensor_api.py`` 是唯一的
+FastAPI 服务入口。保留此文件仅作参考，生产环境请勿使用。
+
+未迁移的功能（如果不再需要可忽略）：
+  - /predict-by-path: JSONL 文件批量推理
+  - /feedback: 独立教练反馈端点
+  - /predict-json: 滑动窗口分段推理
+  - GaussianNB 遗留质量模型降级
+  - 参考库相似度评分
+
+核心推理逻辑已全部移至 ``predict.py``，``sensor_api.py`` 通过调用
+``predict_record`` 提供完整的实时推理服务（包括 /health、/infer 等）。
+
 Serves the v2 continuous-score pipeline with LightGBM as the primary
 quality model and GaussianNB as an optional legacy fallback.
 """

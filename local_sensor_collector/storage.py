@@ -130,6 +130,7 @@ class Storage:
             "created_at": datetime.now().isoformat(),
             "action_type": sample.get("action_type", ""),
             "source_type": sample.get("source_type", "mqtt"),
+            "is_completed": sample.get("is_completed", True),
             "frame_count": len(processed_frames),
             "raw_frame_count": len(raw_frames),
             "coach_score": sample.get("label", {}).get("coach_score", 0),

@@ -15,7 +15,7 @@ collector.py — 本地传感器数据采集器（主入口）
 用法:
   python collector.py                   # 交互模式
   python collector.py --oneshot 300     # 一键采集 300 帧后保存退出
-  python collector.py --mock 180        # 用模拟数据采集 180 帧
+  python collector.py --mock 350        # 用模拟数据采集 350 帧（7秒×50fps）
 
 虚拟环境:
   D:\\py_project\\new_competition\\.venv\\Scripts\\python.exe collector.py
@@ -89,7 +89,7 @@ _mqtt_client = None
 # 模拟数据（无硬件时用）
 # ═══════════════════════════════════════════════════════════════════════════
 
-def generate_mock_frames(count: int = 180) -> List[Dict[str, Any]]:
+def generate_mock_frames(count: int = 350) -> List[Dict[str, Any]]:
     """生成 5 节点模拟 IMU 数据（50Hz，正弦波模式）。"""
     import math as _math
     frames = []
@@ -136,30 +136,35 @@ def _start_mqtt() -> Any:
 
     def on_message(client, userdata, msg):
         global _collected_frames, _collected_raw_frames, _collecting
-        if not _collecting:
-            return
+        try:
+            if not _collecting:
+                return
 
-        topic = msg.topic
-        payload_str = msg.payload.decode("utf-8", errors="replace")
+            topic = msg.topic
+            payload_str = msg.payload.decode("utf-8", errors="replace")
 
-        frames = _parse_mqtt_message(topic, payload_str)
-        if frames:
-            for frame in frames:
-                _collected_frames.append(frame)
-                _collected_raw_frames.append(frame)
+            parsed = _parse_mqtt_message(topic, payload_str)
+            if parsed:
+                _collected_frames.extend(parsed)
+                _collected_raw_frames.extend(parsed)
 
-            total = len(_collected_frames)
-            if total % 50 == 0 or total >= _collect_target:
-                _print_progress(total)
+                total = len(_collected_frames)
+                if total % 25 == 0 or total >= _collect_target:
+                    _print_progress(total)
+        except Exception:
+            _LOGGER.debug("MQTT on_message 异常", exc_info=True)
 
     def on_disconnect(client, userdata, rc):
         _LOGGER.warning("MQTT 断开, rc=%d", rc)
 
-    client = mqtt.Client(client_id=f"local_collector_{int(time.time())}")
+    client = mqtt.Client(
+        client_id=f"local_collector_{int(time.time())}",
+        protocol=mqtt.MQTTv311,
+    )
     client.on_connect = on_connect
     client.on_message = on_message
     client.on_disconnect = on_disconnect
-    client.connect_async(MQTT_BROKER, MQTT_PORT, 10)
+    client.connect_async(MQTT_BROKER, MQTT_PORT, keepalive=30)
     client.loop_start()
     _mqtt_client = client
     _LOGGER.info("MQTT 客户端已启动，正在连接 %s:%d ...", MQTT_BROKER, MQTT_PORT)
@@ -180,30 +185,79 @@ def _parse_mqtt_message(topic: str, payload: str) -> List[Dict[str, Any]]:
     """解析 MQTT 消息为帧列表。
 
     支持两种格式:
-      1. sensor/imu/frames: JSON 格式
-      2. esp32/sensor/data1/data2: 管道分隔自定义格式
+      1. sensor/imu/frames: JSON 格式（紧凑数组，需展开）
+      2. esp32/sensor/data1/data2: 管道分隔自定义格式（旧固件）
     """
     import re as _re
 
     frames = []
 
     if topic == MQTT_TOPIC_FRAMES:
-        # JSON 格式
         try:
             data = json.loads(payload)
-            payload_frames = []
-            if isinstance(data, list):
-                payload_frames = data
-            elif isinstance(data, dict):
-                payload_frames = data.get("frames", data.get("payload", []))
-            for f in payload_frames:
-                if isinstance(f, dict) and isinstance(f.get("points"), dict):
-                    frames.append(f)
-        except json.JSONDecodeError:
-            pass
+            if not isinstance(data, dict):
+                return []
+
+            source = str(data.get("source", "") or "").strip().lower()
+            device_id = str(data.get("device_id", "") or "").strip()
+            calibration = data.get("calibration")
+            filter_status = str(data.get("filter_status", "") or "").strip()
+
+            # 提取节点名: "waist_imu_test" → "waist", "left_ankle_imu_test" → "left_ankle"
+            node_name = source
+            if node_name.endswith("_imu_test"):
+                node_name = node_name[:-9]  # 去掉 "_imu_test"
+
+            # 映射到标准角色
+            ROLE_ALIAS = {
+                "waist": "waist", "left_ankle": "left_foot", "right_ankle": "right_foot",
+                "left_knee": "left_knee", "right_knee": "right_knee",
+            }
+            role = ROLE_ALIAS.get(node_name, "waist")
+
+            raw_frames = data.get("frames", [])
+            if not isinstance(raw_frames, list):
+                return []
+
+            now_ms = int(time.time() * 1000)
+            for item in raw_frames:
+                if isinstance(item, dict):
+                    # 已经是展开格式
+                    if isinstance(item.get("points"), dict):
+                        frames.append(item)
+                    continue
+                # 紧凑数组: [uptime_ms, unix_ts_ms, time_synced, seq, temp_c, ax,ay,az,gx,gy,gz]
+                if not isinstance(item, list) or len(item) < 11:
+                    continue
+                uptime_ms = int(item[0])
+                unix_ts_ms = int(item[1])
+                time_synced = bool(item[2])
+                # seq = item[3]
+                # temperature_c = item[4]
+                ax, ay, az, gx, gy, gz = item[5:11]
+
+                timestamp = unix_ts_ms if time_synced and unix_ts_ms >= 1_700_000_000_000 else (
+                    uptime_ms if uptime_ms > 0 else now_ms
+                )
+
+                frames.append({
+                    "device_id": device_id,
+                    "t": timestamp,
+                    "unix_ts_ms": unix_ts_ms,
+                    "time_synced": time_synced,
+                    "sample_rate_hz": 50,
+                    "points": {
+                        role: {
+                            "ax": float(ax), "ay": float(ay), "az": float(az),
+                            "gx": float(gx), "gy": float(gy), "gz": float(gz),
+                        }
+                    },
+                })
+        except Exception:
+            _LOGGER.debug("MQTT JSON 解析失败", exc_info=True)
 
     elif topic in (MQTT_TOPIC_ESP32_DATA1, MQTT_TOPIC_ESP32_DATA2):
-        # 管道分隔自定义格式: "|HOST:ax,ay,az,gx,gy,gz|1A:ax,ay,..."
+        # 管道分隔自定义格式 (旧固件): "|HOST:ax,ay,az,gx,gy,gz|1A:..."
         node_re = _re.compile(
             r"\|?([A-Za-z0-9_]+):([-\d.]+),([-\d.]+),([-\d.]+),"
             r"([-\d.]+),([-\d.]+),([-\d.]+)"
@@ -254,7 +308,7 @@ def _print_progress(total: int) -> None:
 # ═══════════════════════════════════════════════════════════════════════════
 
 def collect_session(
-    frame_count: int = 180,
+    frame_count: int = 350,
     use_mock: bool = False,
     roles: Optional[List[str]] = None,
     note: str = "",
@@ -378,7 +432,8 @@ def show_samples(storage) -> None:
         return
     print(f"\n  ── 本地样本 (共 {total} 条) ──")
     for item in items:
-        print(f"    [{item['sample_id']}] {item['action_type']:20s}  "
+        ok_mark = "✅" if item.get("is_completed") else "⏳"
+        print(f"    {ok_mark} [{item['sample_id']}] {item['action_type']:12s}  "
               f"{item['frame_count']:4d} 帧  "
               f"评分 {item['coach_score']:3d}  {item['quality_tag'] or '-':4s}  "
               f"{item.get('created_at', '')[:19]}")
@@ -434,7 +489,7 @@ def do_collect(storage, use_mock: bool = False) -> None:
     print()
 
     # 询问帧数
-    default_frames = 180
+    default_frames = 350
     try:
         inp = input(f"  采集帧数 [默认 {default_frames}]: ").strip()
         frame_count = int(inp) if inp else default_frames
@@ -442,8 +497,8 @@ def do_collect(storage, use_mock: bool = False) -> None:
         frame_count = default_frames
 
     # 询问动作类型
-    action_types = ["sensor_session", "basic_skating", "curve_skating",
-                    "weight_shift", "side_push_recover", "braking"]
+    action_types = ["static_standing", "deep_squat", "sensor_session", "basic_skating",
+                    "curve_skating", "weight_shift", "side_push_recover", "braking"]
     print(f"  动作类型: {', '.join(f'[{i}] {t}' for i, t in enumerate(action_types))}")
     try:
         inp = input(f"  选择 [默认 0]: ").strip()
@@ -451,6 +506,10 @@ def do_collect(storage, use_mock: bool = False) -> None:
         action_type = action_types[at_idx] if 0 <= at_idx < len(action_types) else action_types[0]
     except (ValueError, IndexError):
         action_type = action_types[0]
+
+    # 询问是否完成
+    is_ok = input("  是否完成 (y/n) [默认 y]: ").strip().lower()
+    is_completed = is_ok in ("", "y", "yes", "是", "1")
 
     # 询问备注
     note = input("  备注 [可选]: ").strip()
@@ -503,6 +562,7 @@ def do_collect(storage, use_mock: bool = False) -> None:
     sample = {
         "action_type": action_type,
         "source_type": "mock" if use_mock else "mqtt",
+        "is_completed": is_completed,
         "note": note,
         "roles": LOWER_BODY_5_ROLES,
         "frame_count": len(proc),
@@ -588,6 +648,7 @@ def main() -> None:
             sample = {
                 "action_type": args.action,
                 "source_type": "mqtt",
+                "is_completed": False,
                 "note": args.note,
                 "roles": LOWER_BODY_5_ROLES,
                 "frame_count": len(proc),
@@ -616,6 +677,7 @@ def main() -> None:
             sample = {
                 "action_type": args.action,
                 "source_type": "mock",
+                "is_completed": False,
                 "note": args.note,
                 "roles": LOWER_BODY_5_ROLES,
                 "frame_count": len(proc),

@@ -116,9 +116,13 @@ def generate_mock_frames(count: int = 350) -> List[Dict[str, Any]]:
 # MQTT 采集
 # ═══════════════════════════════════════════════════════════════════════════
 
-def _start_mqtt() -> Any:
-    """启动 MQTT 客户端并订阅传感器主题。"""
-    global _mqtt_client
+def _ensure_mqtt() -> Any:
+    """确保 MQTT 已连接（全局长连接，只启动一次）。"""
+    global _mqtt_client, _mqtt_intentional_disconnect
+    if _mqtt_client is not None:
+        return _mqtt_client
+
+    _mqtt_intentional_disconnect = False
     try:
         import paho.mqtt.client as mqtt
     except ImportError:
@@ -139,16 +143,10 @@ def _start_mqtt() -> Any:
         try:
             if not _collecting:
                 return
-
-            topic = msg.topic
-            payload_str = msg.payload.decode("utf-8", errors="replace")
-
-            parsed = _parse_mqtt_message(topic, payload_str)
+            parsed = _parse_mqtt_message(msg.topic, msg.payload.decode("utf-8", errors="replace"))
             if parsed:
                 _collected_raw_frames.extend(parsed)
                 total_raw = len(_collected_raw_frames)
-
-                # 每 125 帧（5节点×25帧/包）刷新一次进度
                 if total_raw % 125 < 25 or total_raw >= _collect_target:
                     _print_progress()
         except Exception:
@@ -158,13 +156,12 @@ def _start_mqtt() -> Any:
         global _mqtt_intentional_disconnect
         if _mqtt_intentional_disconnect:
             return
-        _LOGGER.warning("MQTT 连接断开, rc=%d (自动重连已启用)", rc)
+        _LOGGER.warning("MQTT 断线 rc=%d (自动重连)", rc)
 
     client = mqtt.Client(
         client_id=f"local_collector_{int(time.time())}",
         protocol=mqtt.MQTTv311,
     )
-    # 启用自动重连，最小1秒，最大30秒间隔
     client.reconnect_delay_set(min_delay=1, max_delay=30)
     client.on_connect = on_connect
     client.on_message = on_message
@@ -172,12 +169,12 @@ def _start_mqtt() -> Any:
     client.connect_async(MQTT_BROKER, MQTT_PORT, keepalive=30)
     client.loop_start()
     _mqtt_client = client
-    _LOGGER.info("MQTT 客户端已启动，正在连接 %s:%d ...", MQTT_BROKER, MQTT_PORT)
+    _LOGGER.info("MQTT 已启动 → %s:%d", MQTT_BROKER, MQTT_PORT)
     return client
 
 
-def _stop_mqtt() -> None:
-    """停止 MQTT 客户端。"""
+def _close_mqtt() -> None:
+    """退出时关闭 MQTT（仅程序退出时调用）。"""
     global _mqtt_client, _mqtt_intentional_disconnect
     if _mqtt_client:
         _mqtt_intentional_disconnect = True
@@ -367,17 +364,16 @@ def collect_session(
         }
 
     # ── 真实 MQTT 采集 ──
-    # 正好采够 frame_count 复合帧，不多采
+    # 用全局 MQTT 长连接，采完不断开
     print(f"\n  目标: {frame_count} 帧 | 期望节点: {', '.join(roles)}")
 
-    client = _start_mqtt()
+    client = _ensure_mqtt()
     if client is None:
-        print("  ❌ MQTT 启动失败")
+        print("  ❌ MQTT 不可用")
         return {"processed_frames": [], "roles": roles,
-                "stats": {"error": "mqtt_start_failed"}}
+                "stats": {"error": "mqtt_unavailable"}}
 
-    # 等待 MQTT 连接
-    time.sleep(2)
+    time.sleep(1)
 
     # 清空缓冲
     _collected_raw_frames = []
@@ -399,7 +395,6 @@ def collect_session(
         _collecting = False
         _print_progress()
         print()
-        _stop_mqtt()
 
     raw_frames = list(_collected_raw_frames)
     composite_before = _estimate_composite_frames()
@@ -433,9 +428,6 @@ def collect_session(
             "after_align": len(processed),
             "saved": actual,
             "target": frame_count,
-        },
-    }
-            "after_filter": len(filtered),
         },
     }
 
@@ -476,6 +468,9 @@ def interactive_loop() -> None:
     """交互式主菜单。"""
     storage = get_storage()
 
+    # 预连接 MQTT（只连一次，采完不断）
+    _ensure_mqtt()
+
     print("=" * 60)
     print("  本地传感器数据采集器 v1.0")
     print("  ⚡ 纯 Python · 不依赖云函数/云数据库/微信小程序")
@@ -496,22 +491,16 @@ def interactive_loop() -> None:
         if choice in ("q", "quit", "exit"):
             print("\n  再见！\n")
             break
-
-        if choice == "1":
+        elif choice == "1":
             do_collect(storage, use_mock=False)
-
         elif choice == "2":
             do_collect(storage, use_mock=True)
-
         elif choice == "3":
             show_bench_info()
-
         elif choice == "4":
             show_samples(storage)
-
         elif choice == "5":
             do_export(storage)
-
         else:
             print("  无效选择，请重新输入。")
 
@@ -725,4 +714,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    finally:
+        _close_mqtt()

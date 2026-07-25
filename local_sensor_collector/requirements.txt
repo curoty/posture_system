@@ -1,0 +1,5 @@
+# paho-mqtt 用于订阅 ESP32 传感器节点的 MQTT 数据流
+paho-mqtt>=1.6,<3.0
+
+# numpy 用于数学运算和野值检测
+numpy>=1.21.0

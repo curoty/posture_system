@@ -362,7 +362,9 @@ def collect_session(
 
     # ── 真实 MQTT 采集 ──
     num_roles = len(roles)
-    print(f"\n  目标: {frame_count} 复合帧 (每节点 {frame_count} 帧 × {num_roles} 节点 = {frame_count * num_roles} 原始帧)")
+    # 多收 25 帧缓冲，防止对齐时收尾节点不同步导致不足 frame_count
+    collect_target = frame_count + 25
+    print(f"\n  目标: {frame_count} 复合帧 (采集 {collect_target} 帧缓冲)")
     print(f"  期望节点: {', '.join(roles)}")
 
     client = _start_mqtt()
@@ -376,17 +378,17 @@ def collect_session(
 
     # 清空缓冲
     _collected_raw_frames = []
-    _collect_target = frame_count
+    _collect_target = collect_target
     _collect_start_ms = int(time.time() * 1000)
     _collect_roles = roles
     _collecting = True
 
     print("  采集中... (按 Ctrl+C 提前停止)")
     try:
-        # 轮询直到每节点都到达 frame_count
+        # 多收 buffer 帧，确保对齐后足 350
         while _collecting:
             composite = _estimate_composite_frames()
-            if composite >= frame_count:
+            if composite >= collect_target:
                 break
             _print_progress()
             time.sleep(0.2)
@@ -411,8 +413,13 @@ def collect_session(
     # 物理野值过滤
     filtered = filter_physical_outliers(processed)
 
+    # 修剪到精确的 frame_count 帧
+    if len(filtered) > frame_count:
+        filtered = filtered[:frame_count]
+
     print(f"  去重对齐后: {len(processed)} 帧")
     print(f"  野值过滤后: {len(filtered)} 帧")
+    print(f"  最终保存: {frame_count} 帧")
 
     return {
         "raw_frames": raw_frames,

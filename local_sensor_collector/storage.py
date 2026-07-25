@@ -64,35 +64,12 @@ class Storage:
     def get_index(self) -> Dict[str, Any]:
         return self._index
 
-    # ─── 帧储存（流式 JSONL） ────────────────────────────────────────────
+    # ─── 帧储存（JSONL） ────────────────────────────────────────────────
 
-    def _session_filename(self, prefix: str = "raw") -> str:
+    def _session_filename(self, prefix: str = "aligned") -> str:
         """按当前时间生成文件名。"""
         now = datetime.now().strftime("%Y%m%d_%H%M%S")
         return f"{prefix}_{now}.jsonl"
-
-    def save_raw_frames(self, frames: List[Dict[str, Any]],
-                        session_tag: str = "") -> str:
-        """将原始帧追加写入 JSONL 文件。
-
-        返回: 文件名
-        """
-        if not frames:
-            return ""
-        filename = self._session_filename("raw")
-        filepath = self.storage_dir / filename
-        with open(filepath, "a", encoding="utf-8") as f:
-            for frame in frames:
-                f.write(json.dumps(frame, ensure_ascii=False) + "\n")
-        _LOGGER.info("已保存 %d 帧原始数据到 %s", len(frames), filename)
-        return filename
-
-    def save_processed_frames(self, frames: List[Dict[str, Any]],
-                              session_tag: str = "") -> str:
-        """将处理后帧追加写入 JSONL 文件。"""
-        if not frames:
-            return ""
-        filename = self._session_filename("processed")
         filepath = self.storage_dir / filename
         with open(filepath, "a", encoding="utf-8") as f:
             for frame in frames:
@@ -103,9 +80,10 @@ class Storage:
     # ─── 完整样本保存 ────────────────────────────────────────────────────
 
     def save_sample(self, sample: Dict[str, Any]) -> str:
-        """保存一个完整的采集样本（含元数据 + 帧 + 标签）。
+        """保存一个完整的采集样本（含元数据 + 对齐合并后帧 + 标签）。
 
-        样本写入 samples.json 索引，帧分别写入 raw/processed JSONL。
+        样本写入 samples.json 索引，帧保存到单个 JSONL 文件（已对齐合并）。
+        不保留原始帧，只保留最终处理后的帧。
 
         返回: sample_id
         """
@@ -116,13 +94,16 @@ class Storage:
         raw = f"{time.time_ns()}{json.dumps(sample.get('frames', [])[:1])}"
         sample_id = hashlib.md5(raw.encode()).hexdigest()[:12]
 
-        frames = sample.get("frames", [])
-        raw_frames = sample.get("raw_frames", frames)
-        processed_frames = sample.get("processed_frames", frames)
+        processed_frames = sample.get("processed_frames",
+                          sample.get("frames", []))
 
-        # 保存帧数据
-        raw_file = self.save_raw_frames(raw_frames, sample_id)
-        proc_file = self.save_processed_frames(processed_frames, sample_id)
+        # 只保存对齐合并后的帧
+        filename = self._session_filename("aligned")
+        filepath = self.storage_dir / filename
+        with open(filepath, "w", encoding="utf-8") as f:
+            for frame in processed_frames:
+                f.write(json.dumps(frame, ensure_ascii=False) + "\n")
+        _LOGGER.info("已保存 %d 帧对齐合并数据到 %s", len(processed_frames), filename)
 
         # 构建索引条目
         entry = {
@@ -132,12 +113,10 @@ class Storage:
             "source_type": sample.get("source_type", "mqtt"),
             "is_completed": sample.get("is_completed", True),
             "frame_count": len(processed_frames),
-            "raw_frame_count": len(raw_frames),
             "coach_score": sample.get("label", {}).get("coach_score", 0),
             "quality_tag": sample.get("label", {}).get("quality_tag", ""),
             "note": sample.get("note", ""),
-            "raw_file": str(raw_file),
-            "processed_file": str(proc_file),
+            "aligned_file": str(filename),
             "bench_bias_applied": sample.get("bench_bias_applied", False),
             "roles": sample.get("roles", []),
         }
@@ -162,10 +141,10 @@ class Storage:
         """加载指定样本的完整数据。"""
         for entry in self._index.get("samples", []):
             if entry.get("sample_id") == sample_id:
-                proc_file = self.storage_dir / entry["processed_file"]
-                if proc_file.exists():
+                aligned_file_path = self.storage_dir / entry["aligned_file"]
+                if aligned_file_path.exists():
                     frames = []
-                    with open(proc_file, "r", encoding="utf-8") as f:
+                    with open(aligned_file_path, "r", encoding="utf-8") as f:
                         for line in f:
                             line = line.strip()
                             if line:

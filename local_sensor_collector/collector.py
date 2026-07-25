@@ -81,7 +81,6 @@ _collecting = False
 _collected_raw_frames: List[Dict[str, Any]] = []
 _collect_target = 0
 _collect_start_ms: int = 0
-_collect_roles: List[str] = []
 _mqtt_client = None
 _mqtt_intentional_disconnect = False  # 抑制主动断开的日志
 
@@ -207,8 +206,6 @@ def _parse_mqtt_message(topic: str, payload: str) -> List[Dict[str, Any]]:
 
             source = str(data.get("source", "") or "").strip().lower()
             device_id = str(data.get("device_id", "") or "").strip()
-            calibration = data.get("calibration")
-            filter_status = str(data.get("filter_status", "") or "").strip()
 
             # 提取节点名: "waist_imu_test" → "waist", "left_ankle_imu_test" → "left_ankle"
             node_name = source
@@ -220,7 +217,10 @@ def _parse_mqtt_message(topic: str, payload: str) -> List[Dict[str, Any]]:
                 "waist": "waist", "left_ankle": "left_foot", "right_ankle": "right_foot",
                 "left_knee": "left_knee", "right_knee": "right_knee",
             }
-            role = ROLE_ALIAS.get(node_name, "waist")
+            role = ROLE_ALIAS.get(node_name)
+            if role is None:
+                _LOGGER.warning("未知节点来源 %s, 丢弃", node_name)
+                return []
 
             raw_frames = data.get("frames", [])
             if not isinstance(raw_frames, list):
@@ -367,7 +367,6 @@ def collect_session(
         }
 
     # ── 真实 MQTT 采集 ──
-    num_roles = len(roles)
     # 多收 50 帧缓冲（1秒），防止对齐时节点间时间偏差导致帧丢失
     collect_target = frame_count + 50
     print(f"\n  目标: {frame_count} 复合帧 (采集 {collect_target} 帧缓冲)")
@@ -386,7 +385,6 @@ def collect_session(
     _collected_raw_frames = []
     _collect_target = collect_target
     _collect_start_ms = int(time.time() * 1000)
-    _collect_roles = roles
     _collecting = True
 
     print("  采集中... (按 Ctrl+C 提前停止)")

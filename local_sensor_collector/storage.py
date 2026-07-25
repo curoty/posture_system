@@ -70,12 +70,6 @@ class Storage:
         """按当前时间生成文件名。"""
         now = datetime.now().strftime("%Y%m%d_%H%M%S")
         return f"{prefix}_{now}.jsonl"
-        filepath = self.storage_dir / filename
-        with open(filepath, "a", encoding="utf-8") as f:
-            for frame in frames:
-                f.write(json.dumps(frame, ensure_ascii=False) + "\n")
-        _LOGGER.info("已保存 %d 帧处理后数据到 %s", len(frames), filename)
-        return filename
 
     # ─── 完整样本保存 ────────────────────────────────────────────────────
 

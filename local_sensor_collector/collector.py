@@ -83,6 +83,7 @@ _collect_target = 0
 _collect_start_ms: int = 0
 _collect_roles: List[str] = []
 _mqtt_client = None
+_mqtt_intentional_disconnect = False  # 抑制主动断开的日志
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -155,12 +156,17 @@ def _start_mqtt() -> Any:
             _LOGGER.debug("MQTT on_message 异常", exc_info=True)
 
     def on_disconnect(client, userdata, rc):
-        _LOGGER.warning("MQTT 断开, rc=%d", rc)
+        global _mqtt_intentional_disconnect
+        if _mqtt_intentional_disconnect:
+            return
+        _LOGGER.warning("MQTT 连接断开, rc=%d (自动重连已启用)", rc)
 
     client = mqtt.Client(
         client_id=f"local_collector_{int(time.time())}",
         protocol=mqtt.MQTTv311,
     )
+    # 启用自动重连，最小1秒，最大30秒间隔
+    client.reconnect_delay_set(min_delay=1, max_delay=30)
     client.on_connect = on_connect
     client.on_message = on_message
     client.on_disconnect = on_disconnect
@@ -173,8 +179,9 @@ def _start_mqtt() -> Any:
 
 def _stop_mqtt() -> None:
     """停止 MQTT 客户端。"""
-    global _mqtt_client
+    global _mqtt_client, _mqtt_intentional_disconnect
     if _mqtt_client:
+        _mqtt_intentional_disconnect = True
         _mqtt_client.loop_stop()
         _mqtt_client.disconnect()
         _mqtt_client = None

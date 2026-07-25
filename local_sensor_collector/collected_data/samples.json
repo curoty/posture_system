@@ -1,0 +1,24 @@
+{
+  "samples": [
+    {
+      "sample_id": "c0b93ab9eb26",
+      "created_at": "2026-07-25T16:55:52.916095",
+      "action_type": "deep_squat",
+      "source_type": "mock",
+      "is_completed": false,
+      "frame_count": 350,
+      "coach_score": 0,
+      "quality_tag": "",
+      "note": "验证缓冲+显示修复",
+      "aligned_file": "aligned_20260725_165552.jsonl",
+      "bench_bias_applied": true,
+      "roles": [
+        "waist",
+        "left_knee",
+        "right_knee",
+        "left_foot",
+        "right_foot"
+      ]
+    }
+  ]
+}

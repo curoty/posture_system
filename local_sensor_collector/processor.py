@@ -339,11 +339,15 @@ def process_raw_frames(
 def filter_physical_outliers(
     frames: List[Dict[str, Any]],
 ) -> List[Dict[str, Any]]:
-    """剔除物理上不可能的帧（传感器故障/传输错误导致的野值）。"""
+    """剔除物理上不可能的数据（传感器故障/传输错误导致的野值）。
+
+    与 denoise.py 不同：这里是 **整帧级处理**（对齐后的复合帧），
+    不丢弃整帧，只把异常节点的数据清零，其他正常节点保留。
+    """
     result = []
     for frame in frames:
         points = frame.get("points", {})
-        keep = True
+        cleaned_points = {}
         for role, pt in points.items():
             if not isinstance(pt, dict):
                 continue
@@ -355,9 +359,15 @@ def filter_physical_outliers(
             gz = abs(float(pt.get("gz", 0)))
             acc_norm = np.sqrt(ax**2 + ay**2 + az**2)
             gyro_norm = np.sqrt(gx**2 + gy**2 + gz**2)
+
             if acc_norm > PHYSICAL_ACC_LIMIT_G or gyro_norm > PHYSICAL_GYRO_LIMIT_DPS:
-                keep = False
-                break
-        if keep:
-            result.append(frame)
+                # 只清零这个异常节点，不丢整帧
+                _LOGGER.debug("野值节点 %s: acc_norm=%.1f  gyro_norm=%.0f", role, acc_norm, gyro_norm)
+                cleaned_points[role] = {"ax": 0, "ay": 0, "az": 0,
+                                        "gx": 0, "gy": 0, "gz": 0}
+            else:
+                cleaned_points[role] = pt
+
+        if cleaned_points:
+            result.append({**frame, "points": cleaned_points})
     return result

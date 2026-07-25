@@ -78,10 +78,10 @@ ESP32_NODE_ROLE_MAP = {
 
 # ─── 全局采集状态 ───────────────────────────────────────────────────────
 _collecting = False
-_collected_frames: List[Dict[str, Any]] = []
 _collected_raw_frames: List[Dict[str, Any]] = []
 _collect_target = 0
 _collect_start_ms: int = 0
+_collect_roles: List[str] = []
 _mqtt_client = None
 
 
@@ -135,7 +135,7 @@ def _start_mqtt() -> Any:
             _LOGGER.error("MQTT 连接失败, rc=%d", rc)
 
     def on_message(client, userdata, msg):
-        global _collected_frames, _collected_raw_frames, _collecting
+        global _collected_raw_frames, _collecting
         try:
             if not _collecting:
                 return
@@ -145,12 +145,12 @@ def _start_mqtt() -> Any:
 
             parsed = _parse_mqtt_message(topic, payload_str)
             if parsed:
-                _collected_frames.extend(parsed)
                 _collected_raw_frames.extend(parsed)
+                total_raw = len(_collected_raw_frames)
 
-                total = len(_collected_frames)
-                if total % 25 == 0 or total >= _collect_target:
-                    _print_progress(total)
+                # 每 125 帧（5节点×25帧/包）刷新一次进度
+                if total_raw % 125 < 25 or total_raw >= _collect_target:
+                    _print_progress()
         except Exception:
             _LOGGER.debug("MQTT on_message 异常", exc_info=True)
 
@@ -292,14 +292,27 @@ def _parse_mqtt_message(topic: str, payload: str) -> List[Dict[str, Any]]:
     return frames
 
 
-def _print_progress(total: int) -> None:
+def _estimate_composite_frames() -> int:
+    """从已收集的原始帧估算对齐后的复合帧数 = 最少角色的帧数。"""
+    role_counts: Dict[str, int] = {}
+    for f in _collected_raw_frames:
+        for role in (f.get("points") or {}):
+            role_counts[role] = role_counts.get(role, 0) + 1
+    if not role_counts:
+        return 0
+    return min(role_counts.values())
+
+
+def _print_progress() -> None:
+    composite = _estimate_composite_frames()
     target = _collect_target
-    pct = min(100, int(total / max(1, target) * 100))
+    pct = min(100, int(composite / max(1, target) * 100))
     elapsed = time.time() - (_collect_start_ms / 1000 if _collect_start_ms else time.time())
     elapsed = max(0.1, elapsed)
-    fps = total / elapsed
+    fps = composite / elapsed
     bar = "█" * (pct // 5) + "░" * (20 - pct // 5)
-    sys.stderr.write(f"\r  采集进度: |{bar}| {total}/{target} 帧 ({pct}%)  {fps:.0f} fps")
+    raw = len(_collected_raw_frames)
+    sys.stderr.write(f"\r  复合帧: |{bar}| {composite}/{target}  ({pct}%)  {fps:.0f} 复合fps  原始帧: {raw}")
     sys.stderr.flush()
 
 
@@ -326,7 +339,7 @@ def collect_session(
     返回:
         {"raw_frames": [...], "processed_frames": [...], "stats": {...}}
     """
-    global _collecting, _collected_frames, _collected_raw_frames, _collect_target, _collect_start_ms
+    global _collecting, _collected_raw_frames, _collect_target, _collect_start_ms
 
     roles = roles or LOWER_BODY_5_ROLES
 
@@ -348,7 +361,9 @@ def collect_session(
         }
 
     # ── 真实 MQTT 采集 ──
-    print(f"\n  目标: {frame_count} 帧 | 期望节点: {', '.join(roles)}")
+    num_roles = len(roles)
+    print(f"\n  目标: {frame_count} 复合帧 (每节点 {frame_count} 帧 × {num_roles} 节点 = {frame_count * num_roles} 原始帧)")
+    print(f"  期望节点: {', '.join(roles)}")
 
     client = _start_mqtt()
     if client is None:
@@ -360,29 +375,32 @@ def collect_session(
     time.sleep(2)
 
     # 清空缓冲
-    _collected_frames = []
     _collected_raw_frames = []
     _collect_target = frame_count
     _collect_start_ms = int(time.time() * 1000)
+    _collect_roles = roles
     _collecting = True
 
     print("  采集中... (按 Ctrl+C 提前停止)")
     try:
-        # 轮询等待直到帧数足够
-        while len(_collected_frames) < frame_count:
-            time.sleep(0.1)
-            if len(_collected_frames) % 10 == 0:
-                _print_progress(len(_collected_frames))
+        # 轮询直到每节点都到达 frame_count
+        while _collecting:
+            composite = _estimate_composite_frames()
+            if composite >= frame_count:
+                break
+            _print_progress()
+            time.sleep(0.2)
     except KeyboardInterrupt:
         print("\n  采集被用户中断")
     finally:
         _collecting = False
-        _print_progress(len(_collected_frames))
+        _print_progress()
         print()
         _stop_mqtt()
 
     raw_frames = list(_collected_raw_frames)
-    print(f"\n  原始帧数: {len(raw_frames)}")
+    composite_before = _estimate_composite_frames()
+    print(f"\n  原始帧: {len(raw_frames)} | 每节点最少: {composite_before} 帧")
 
     # 处理管线
     processed = process_raw_frames(

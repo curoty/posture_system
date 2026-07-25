@@ -1,16 +1,36 @@
 {
   "samples": [
     {
-      "sample_id": "1b9f5200b29e",
-      "created_at": "2026-07-25T17:25:30.032178",
+      "sample_id": "5e7665e8ac11",
+      "created_at": "2026-07-25T17:33:32.802067",
       "action_type": "static_standing",
-      "source_type": "mock",
-      "is_completed": false,
+      "source_type": "mqtt",
+      "is_completed": true,
       "frame_count": 350,
-      "coach_score": 0,
-      "quality_tag": "",
-      "note": "最终验证",
-      "aligned_file": "aligned_20260725_172530.jsonl",
+      "coach_score": 78,
+      "quality_tag": "良好",
+      "note": "",
+      "aligned_file": "aligned_20260725_173332.jsonl",
+      "bench_bias_applied": true,
+      "roles": [
+        "waist",
+        "left_knee",
+        "right_knee",
+        "left_foot",
+        "right_foot"
+      ]
+    },
+    {
+      "sample_id": "a56dfcaa8b87",
+      "created_at": "2026-07-25T17:33:10.014937",
+      "action_type": "static_standing",
+      "source_type": "mqtt",
+      "is_completed": true,
+      "frame_count": 350,
+      "coach_score": 78,
+      "quality_tag": "良好",
+      "note": "",
+      "aligned_file": "aligned_20260725_173310.jsonl",
       "bench_bias_applied": true,
       "roles": [
         "waist",

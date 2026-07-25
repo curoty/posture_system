@@ -367,10 +367,8 @@ def collect_session(
         }
 
     # ── 真实 MQTT 采集 ──
-    # 多收 50 帧缓冲（1秒），防止对齐时节点间时间偏差导致帧丢失
-    collect_target = frame_count + 50
-    print(f"\n  目标: {frame_count} 复合帧 (采集 {collect_target} 帧缓冲)")
-    print(f"  期望节点: {', '.join(roles)}")
+    # 正好采够 frame_count 复合帧，不多采
+    print(f"\n  目标: {frame_count} 帧 | 期望节点: {', '.join(roles)}")
 
     client = _start_mqtt()
     if client is None:
@@ -383,16 +381,15 @@ def collect_session(
 
     # 清空缓冲
     _collected_raw_frames = []
-    _collect_target = collect_target
+    _collect_target = frame_count
     _collect_start_ms = int(time.time() * 1000)
     _collecting = True
 
     print("  采集中... (按 Ctrl+C 提前停止)")
     try:
-        # 多收 buffer 帧，确保对齐后足 350
         while _collecting:
             composite = _estimate_composite_frames()
-            if composite >= collect_target:
+            if composite >= frame_count:
                 break
             _print_progress()
             time.sleep(0.2)
@@ -410,29 +407,34 @@ def collect_session(
 
     # 处理管线
     processed = process_raw_frames(
-        raw_frames, roles=roles,
+        raw_frames, roles=roles, sample_interval_ms=20,
         apply_bias=True, do_dedup=True, do_align=True,
     )
 
-    # 物理野值过滤
+    # 物理野值过滤（只清零坏节点，不丢帧）
     filtered = filter_physical_outliers(processed)
 
-    # 修剪到精确的 frame_count 帧（只在有富余时切）
-    actual_save = len(filtered)
-    if actual_save > frame_count:
+    # 取前 frame_count 帧
+    actual = len(filtered)
+    if actual > frame_count:
         filtered = filtered[:frame_count]
-        actual_save = frame_count
+        actual = frame_count
 
-    print(f"  去重对齐后: {len(processed)} 帧")
-    print(f"  野值过滤后: {len(filtered)} 帧")
-    print(f"  最终保存: {actual_save}/{frame_count} 帧")
+    if actual < frame_count:
+        print(f"  ⚠️ 对齐后不足 {frame_count} 帧，实际保存 {actual} 帧（少 {frame_count - actual} 帧）")
+    else:
+        print(f"  最终保存: {actual}/{frame_count} 帧 ✅")
 
     return {
         "processed_frames": filtered,
         "roles": roles,
         "stats": {
             "raw_count": len(raw_frames),
-            "after_dedup_align": len(processed),
+            "after_align": len(processed),
+            "saved": actual,
+            "target": frame_count,
+        },
+    }
             "after_filter": len(filtered),
         },
     }
@@ -562,9 +564,8 @@ def do_collect(storage, use_mock: bool = False) -> None:
     proc = result["processed_frames"]
     stats = result["stats"]
 
-    print(f"\n  ✅ 采集完成: {len(proc)} 帧")
-    print(f"     去重对齐: {stats.get('after_dedup_align', '?')} 帧")
-    print(f"     野值过滤: {stats.get('after_filter', '?')} 帧")
+    print(f"\n  ✅ 采集完成: {len(proc)} 帧 (目标 {stats.get('target', '?')} 帧)")
+    print(f"     原始共 {stats.get('raw_count', 0)} 帧")
 
     # 询问评分
     print()

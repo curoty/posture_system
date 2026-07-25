@@ -337,7 +337,7 @@ def collect_session(
         action_type: 动作类型
 
     返回:
-        {"raw_frames": [...], "processed_frames": [...], "stats": {...}}
+        {"processed_frames": [...], "stats": {...}}
     """
     global _collecting, _collected_raw_frames, _collect_target, _collect_start_ms
 
@@ -354,7 +354,6 @@ def collect_session(
         proc_count = len(processed)
         print(f"  模拟数据: {raw_count} 原始帧 → {proc_count} 处理后帧")
         return {
-            "raw_frames": raw_frames,
             "processed_frames": processed,
             "roles": roles,
             "stats": {"raw_count": raw_count, "processed_count": proc_count},
@@ -362,15 +361,15 @@ def collect_session(
 
     # ── 真实 MQTT 采集 ──
     num_roles = len(roles)
-    # 多收 25 帧缓冲，防止对齐时收尾节点不同步导致不足 frame_count
-    collect_target = frame_count + 25
+    # 多收 50 帧缓冲（1秒），防止对齐时节点间时间偏差导致帧丢失
+    collect_target = frame_count + 50
     print(f"\n  目标: {frame_count} 复合帧 (采集 {collect_target} 帧缓冲)")
     print(f"  期望节点: {', '.join(roles)}")
 
     client = _start_mqtt()
     if client is None:
         print("  ❌ MQTT 启动失败")
-        return {"raw_frames": [], "processed_frames": [], "roles": roles,
+        return {"processed_frames": [], "roles": roles,
                 "stats": {"error": "mqtt_start_failed"}}
 
     # 等待 MQTT 连接
@@ -413,16 +412,17 @@ def collect_session(
     # 物理野值过滤
     filtered = filter_physical_outliers(processed)
 
-    # 修剪到精确的 frame_count 帧
-    if len(filtered) > frame_count:
+    # 修剪到精确的 frame_count 帧（只在有富余时切）
+    actual_save = len(filtered)
+    if actual_save > frame_count:
         filtered = filtered[:frame_count]
+        actual_save = frame_count
 
     print(f"  去重对齐后: {len(processed)} 帧")
     print(f"  野值过滤后: {len(filtered)} 帧")
-    print(f"  最终保存: {frame_count} 帧")
+    print(f"  最终保存: {actual_save}/{frame_count} 帧")
 
     return {
-        "raw_frames": raw_frames,
         "processed_frames": filtered,
         "roles": roles,
         "stats": {
@@ -555,10 +555,9 @@ def do_collect(storage, use_mock: bool = False) -> None:
         return
 
     proc = result["processed_frames"]
-    raw = result["raw_frames"]
     stats = result["stats"]
 
-    print(f"\n  ✅ 采集完成: {len(proc)} 帧 (原始 {len(raw)} 帧)")
+    print(f"\n  ✅ 采集完成: {len(proc)} 帧")
     print(f"     去重对齐: {stats.get('after_dedup_align', '?')} 帧")
     print(f"     野值过滤: {stats.get('after_filter', '?')} 帧")
 
@@ -591,7 +590,6 @@ def do_collect(storage, use_mock: bool = False) -> None:
         "note": note,
         "roles": LOWER_BODY_5_ROLES,
         "frame_count": len(proc),
-        "raw_frames": raw,
         "processed_frames": proc,
         "bench_bias_applied": True,
         "label": {
@@ -677,7 +675,6 @@ def main() -> None:
                 "note": args.note,
                 "roles": LOWER_BODY_5_ROLES,
                 "frame_count": len(proc),
-                "raw_frames": result["raw_frames"],
                 "processed_frames": proc,
                 "bench_bias_applied": True,
                 "label": {"coach_score": 0, "quality_tag": ""},
@@ -706,7 +703,6 @@ def main() -> None:
                 "note": args.note,
                 "roles": LOWER_BODY_5_ROLES,
                 "frame_count": len(proc),
-                "raw_frames": result["raw_frames"],
                 "processed_frames": proc,
                 "bench_bias_applied": True,
                 "label": {"coach_score": 0, "quality_tag": ""},

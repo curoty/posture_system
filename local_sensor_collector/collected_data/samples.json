@@ -1,16 +1,16 @@
 {
   "samples": [
     {
-      "sample_id": "860dda2d35a8",
-      "created_at": "2026-07-26T10:22:55.128657",
+      "sample_id": "64f567dd522b",
+      "created_at": "2026-07-26T10:32:12.321531",
       "action_type": "static_standing",
       "source_type": "mqtt",
       "is_completed": true,
-      "frame_count": 329,
+      "frame_count": 350,
       "coach_score": 78,
       "quality_tag": "良好",
       "note": "",
-      "aligned_file": "aligned_20260726_102255.jsonl",
+      "aligned_file": "aligned_20260726_103212.jsonl",
       "bench_bias_applied": true,
       "roles": [
         "waist",
@@ -21,16 +21,16 @@
       ]
     },
     {
-      "sample_id": "d5581fe8eb4c",
-      "created_at": "2026-07-26T10:22:37.842792",
+      "sample_id": "aa2753b883bb",
+      "created_at": "2026-07-26T10:31:56.889921",
       "action_type": "static_standing",
       "source_type": "mqtt",
       "is_completed": true,
-      "frame_count": 333,
+      "frame_count": 350,
       "coach_score": 78,
       "quality_tag": "良好",
       "note": "",
-      "aligned_file": "aligned_20260726_102237.jsonl",
+      "aligned_file": "aligned_20260726_103156.jsonl",
       "bench_bias_applied": true,
       "roles": [
         "waist",
@@ -41,16 +41,76 @@
       ]
     },
     {
-      "sample_id": "16dc201ab005",
-      "created_at": "2026-07-26T10:22:07.155379",
+      "sample_id": "0edd3ce21eba",
+      "created_at": "2026-07-26T10:31:46.766548",
       "action_type": "static_standing",
       "source_type": "mqtt",
       "is_completed": true,
-      "frame_count": 329,
+      "frame_count": 350,
       "coach_score": 78,
       "quality_tag": "良好",
       "note": "",
-      "aligned_file": "aligned_20260726_102207.jsonl",
+      "aligned_file": "aligned_20260726_103146.jsonl",
+      "bench_bias_applied": true,
+      "roles": [
+        "waist",
+        "left_knee",
+        "right_knee",
+        "left_foot",
+        "right_foot"
+      ]
+    },
+    {
+      "sample_id": "570ae0155e79",
+      "created_at": "2026-07-26T10:31:31.541273",
+      "action_type": "static_standing",
+      "source_type": "mqtt",
+      "is_completed": true,
+      "frame_count": 350,
+      "coach_score": 78,
+      "quality_tag": "良好",
+      "note": "",
+      "aligned_file": "aligned_20260726_103131.jsonl",
+      "bench_bias_applied": true,
+      "roles": [
+        "waist",
+        "left_knee",
+        "right_knee",
+        "left_foot",
+        "right_foot"
+      ]
+    },
+    {
+      "sample_id": "96cc8b195144",
+      "created_at": "2026-07-26T10:30:34.398238",
+      "action_type": "static_standing",
+      "source_type": "mqtt",
+      "is_completed": true,
+      "frame_count": 350,
+      "coach_score": 78,
+      "quality_tag": "良好",
+      "note": "",
+      "aligned_file": "aligned_20260726_103034.jsonl",
+      "bench_bias_applied": true,
+      "roles": [
+        "waist",
+        "left_knee",
+        "right_knee",
+        "left_foot",
+        "right_foot"
+      ]
+    },
+    {
+      "sample_id": "b32094b49f96",
+      "created_at": "2026-07-26T10:30:15.560412",
+      "action_type": "static_standing",
+      "source_type": "mqtt",
+      "is_completed": true,
+      "frame_count": 350,
+      "coach_score": 78,
+      "quality_tag": "良好",
+      "note": "",
+      "aligned_file": "aligned_20260726_103015.jsonl",
       "bench_bias_applied": true,
       "roles": [
         "waist",

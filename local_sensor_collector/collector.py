@@ -315,7 +315,7 @@ def _print_progress() -> None:
     elapsed = max(0.1, elapsed)
     fps = composite / elapsed
     status = "✅" if composite >= target else "⏳"
-    sys.stderr.write(f"\r  {status} {composite}/{target} 帧  {fps:.0f} fps  原始:{raw}")
+    sys.stderr.write(f"\r  {status} {composite}/{target} 帧  {fps:.0f} fps")
     sys.stderr.flush()
 
 
@@ -486,7 +486,9 @@ def interactive_loop() -> None:
         print("    [q] 退出")
         print()
 
-        choice = input("  请选择: ").strip().lower()
+        choice = input("  请选择 [默认 1]: ").strip().lower()
+        if not choice:
+            choice = "1"
 
         if choice in ("q", "quit", "exit"):
             print("\n  再见！\n")

@@ -79,7 +79,8 @@ ESP32_NODE_ROLE_MAP = {
 # ─── 全局采集状态 ───────────────────────────────────────────────────────
 _collecting = False
 _collected_raw_frames: List[Dict[str, Any]] = []
-_collect_target = 0
+_collect_target = 0          # 内部采集目标（含缓冲）
+_collect_real_target = 0     # 用户设定的真实目标（显示用）
 _collect_start_ms: int = 0
 _mqtt_client = None
 _mqtt_intentional_disconnect = False  # 抑制主动断开的日志
@@ -309,14 +310,12 @@ def _estimate_composite_frames() -> int:
 
 def _print_progress() -> None:
     composite = _estimate_composite_frames()
-    target = _collect_target
-    pct = min(100, int(composite / max(1, target) * 100))
+    target = _collect_real_target or _collect_target
     elapsed = time.time() - (_collect_start_ms / 1000 if _collect_start_ms else time.time())
     elapsed = max(0.1, elapsed)
     fps = composite / elapsed
-    bar = "█" * (pct // 5) + "░" * (20 - pct // 5)
-    raw = len(_collected_raw_frames)
-    sys.stderr.write(f"\r  复合帧: |{bar}| {composite}/{target}  ({pct}%)  {fps:.0f} 复合fps  原始帧: {raw}")
+    status = "✅" if composite >= target else "⏳"
+    sys.stderr.write(f"\r  {status} {composite}/{target} 帧  {fps:.0f} fps  原始:{raw}")
     sys.stderr.flush()
 
 
@@ -364,7 +363,8 @@ def collect_session(
         }
 
     # ── 真实 MQTT 采集 ──
-    # 用全局 MQTT 长连接，采完不断开
+    # 多采 30 帧缓冲（约 0.6 秒），对齐丢弃边界帧后依然能取足 frame_count
+    collect_target = frame_count + 30
     print(f"\n  目标: {frame_count} 帧 | 期望节点: {', '.join(roles)}")
 
     client = _ensure_mqtt()
@@ -377,15 +377,16 @@ def collect_session(
 
     # 清空缓冲
     _collected_raw_frames = []
-    _collect_target = frame_count
+    _collect_real_target = frame_count
+    _collect_target = collect_target
     _collect_start_ms = int(time.time() * 1000)
     _collecting = True
 
-    print("  采集中... (按 Ctrl+C 提前停止)")
+    print(f"\n  采集中... (缓冲{collect_target - frame_count}帧防对齐丢失)")
     try:
         while _collecting:
             composite = _estimate_composite_frames()
-            if composite >= frame_count:
+            if composite >= collect_target:
                 break
             _print_progress()
             time.sleep(0.2)
@@ -406,19 +407,18 @@ def collect_session(
         apply_bias=True, do_dedup=True, do_align=True,
     )
 
-    # 物理野值过滤（只清零坏节点，不丢帧）
+    # 物理野值过滤（前向填充，帧数不变）
     filtered = filter_physical_outliers(processed)
 
     # 取前 frame_count 帧
-    actual = len(filtered)
-    if actual > frame_count:
+    if len(filtered) >= frame_count:
         filtered = filtered[:frame_count]
         actual = frame_count
-
-    if actual < frame_count:
-        print(f"  ⚠️ 对齐后不足 {frame_count} 帧，实际保存 {actual} 帧（少 {frame_count - actual} 帧）")
-    else:
         print(f"  最终保存: {actual}/{frame_count} 帧 ✅")
+    else:
+        actual = len(filtered)
+        print(f"  ⚠️ 对齐后不足 {frame_count} 帧，实际保存 {actual} 帧（少 {frame_count - actual} 帧）")
+        print(f"  建议: 采集更多帧数，或检查节点时钟同步")
 
     return {
         "processed_frames": filtered,

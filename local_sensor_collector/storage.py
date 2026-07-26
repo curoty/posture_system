@@ -58,6 +58,7 @@ class Storage:
 
     def _save_index(self) -> None:
         """保存样本索引。"""
+        self.storage_dir.mkdir(parents=True, exist_ok=True)
         with open(self._index_path, "w", encoding="utf-8") as f:
             json.dump(self._index, f, ensure_ascii=False, indent=2)
 
@@ -94,6 +95,7 @@ class Storage:
         # 只保存对齐合并后的帧
         filename = self._session_filename("aligned")
         filepath = self.storage_dir / filename
+        self.storage_dir.mkdir(parents=True, exist_ok=True)
         with open(filepath, "w", encoding="utf-8") as f:
             for frame in processed_frames:
                 f.write(json.dumps(frame, ensure_ascii=False) + "\n")

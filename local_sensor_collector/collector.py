@@ -399,13 +399,31 @@ def collect_session(
 
     raw_frames = list(_collected_raw_frames)
     composite_before = _estimate_composite_frames()
-    print(f"\n  原始帧: {len(raw_frames)} | 每节点最少: {composite_before} 帧")
+
+    # 诊断：打印原始帧中各角色的帧数
+    from collections import Counter as _Counter
+    raw_role_counts = _Counter()
+    for f in raw_frames:
+        raw_role_counts.update(f.get("points", {}).keys())
+    raw_roles_str = "  ".join(f"{r}={raw_role_counts[r]}" for r in sorted(raw_role_counts))
+    missing_roles = [r for r in roles if raw_role_counts[r] == 0]
+    if missing_roles:
+        print(f"\n  ⚠️ 原始帧中缺失节点: {missing_roles}")
+        if "waist" in missing_roles:
+            print(f"     waist 数据不存在 — 请检查腰部设备是否连接到 MQTT")
+    print(f"  原始帧: {len(raw_frames)}  |  {raw_roles_str}")
 
     # 处理管线
     processed = process_raw_frames(
         raw_frames, roles=roles, sample_interval_ms=20,
         apply_bias=True, do_dedup=True, do_align=True,
     )
+
+    # 诊断：对齐后的角色
+    align_roles = _Counter()
+    for f in processed:
+        align_roles.update(f.get("points", {}).keys())
+    print(f"  对齐后: {len(processed)} 帧  |  {'  '.join(f'{r}={align_roles[r]}' for r in sorted(align_roles))}")
 
     # 物理野值过滤（前向填充，帧数不变）
     filtered = filter_physical_outliers(processed)

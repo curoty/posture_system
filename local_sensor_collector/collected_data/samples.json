@@ -1,8 +1,8 @@
 {
   "samples": [
     {
-      "sample_id": "64f567dd522b",
-      "created_at": "2026-07-26T10:32:12.321531",
+      "sample_id": "b9425111c0d5",
+      "created_at": "2026-07-26T10:51:53.316813",
       "action_type": "static_standing",
       "source_type": "mqtt",
       "is_completed": true,
@@ -10,7 +10,7 @@
       "coach_score": 78,
       "quality_tag": "良好",
       "note": "",
-      "aligned_file": "aligned_20260726_103212.jsonl",
+      "aligned_file": "aligned_20260726_105153.jsonl",
       "bench_bias_applied": true,
       "roles": [
         "waist",
@@ -21,8 +21,8 @@
       ]
     },
     {
-      "sample_id": "aa2753b883bb",
-      "created_at": "2026-07-26T10:31:56.889921",
+      "sample_id": "0de903775c3f",
+      "created_at": "2026-07-26T10:51:26.030835",
       "action_type": "static_standing",
       "source_type": "mqtt",
       "is_completed": true,
@@ -30,7 +30,7 @@
       "coach_score": 78,
       "quality_tag": "良好",
       "note": "",
-      "aligned_file": "aligned_20260726_103156.jsonl",
+      "aligned_file": "aligned_20260726_105126.jsonl",
       "bench_bias_applied": true,
       "roles": [
         "waist",
@@ -41,8 +41,8 @@
       ]
     },
     {
-      "sample_id": "0edd3ce21eba",
-      "created_at": "2026-07-26T10:31:46.766548",
+      "sample_id": "f5c0ca83f791",
+      "created_at": "2026-07-26T10:49:35.998592",
       "action_type": "static_standing",
       "source_type": "mqtt",
       "is_completed": true,
@@ -50,7 +50,7 @@
       "coach_score": 78,
       "quality_tag": "良好",
       "note": "",
-      "aligned_file": "aligned_20260726_103146.jsonl",
+      "aligned_file": "aligned_20260726_104935.jsonl",
       "bench_bias_applied": true,
       "roles": [
         "waist",
@@ -61,8 +61,8 @@
       ]
     },
     {
-      "sample_id": "570ae0155e79",
-      "created_at": "2026-07-26T10:31:31.541273",
+      "sample_id": "01ae2d7894a0",
+      "created_at": "2026-07-26T10:49:20.505854",
       "action_type": "static_standing",
       "source_type": "mqtt",
       "is_completed": true,
@@ -70,7 +70,7 @@
       "coach_score": 78,
       "quality_tag": "良好",
       "note": "",
-      "aligned_file": "aligned_20260726_103131.jsonl",
+      "aligned_file": "aligned_20260726_104920.jsonl",
       "bench_bias_applied": true,
       "roles": [
         "waist",
@@ -81,8 +81,8 @@
       ]
     },
     {
-      "sample_id": "96cc8b195144",
-      "created_at": "2026-07-26T10:30:34.398238",
+      "sample_id": "90754d919bb9",
+      "created_at": "2026-07-26T10:49:04.702253",
       "action_type": "static_standing",
       "source_type": "mqtt",
       "is_completed": true,
@@ -90,7 +90,7 @@
       "coach_score": 78,
       "quality_tag": "良好",
       "note": "",
-      "aligned_file": "aligned_20260726_103034.jsonl",
+      "aligned_file": "aligned_20260726_104904.jsonl",
       "bench_bias_applied": true,
       "roles": [
         "waist",
@@ -101,8 +101,8 @@
       ]
     },
     {
-      "sample_id": "b32094b49f96",
-      "created_at": "2026-07-26T10:30:15.560412",
+      "sample_id": "a3bc8263471d",
+      "created_at": "2026-07-26T10:48:48.993124",
       "action_type": "static_standing",
       "source_type": "mqtt",
       "is_completed": true,
@@ -110,7 +110,27 @@
       "coach_score": 78,
       "quality_tag": "良好",
       "note": "",
-      "aligned_file": "aligned_20260726_103015.jsonl",
+      "aligned_file": "aligned_20260726_104848.jsonl",
+      "bench_bias_applied": true,
+      "roles": [
+        "waist",
+        "left_knee",
+        "right_knee",
+        "left_foot",
+        "right_foot"
+      ]
+    },
+    {
+      "sample_id": "bc9ce437bf9a",
+      "created_at": "2026-07-26T10:48:28.638683",
+      "action_type": "static_standing",
+      "source_type": "mqtt",
+      "is_completed": true,
+      "frame_count": 350,
+      "coach_score": 78,
+      "quality_tag": "良好",
+      "note": "",
+      "aligned_file": "aligned_20260726_104828.jsonl",
       "bench_bias_applied": true,
       "roles": [
         "waist",

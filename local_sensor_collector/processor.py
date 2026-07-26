@@ -339,15 +339,19 @@ def process_raw_frames(
 def filter_physical_outliers(
     frames: List[Dict[str, Any]],
 ) -> List[Dict[str, Any]]:
-    """剔除物理上不可能的数据（传感器故障/传输错误导致的野值）。
+    """替换物理上不可能的数据（传感器故障/传输错误导致的野值）。
 
-    与 denoise.py 不同：这里是 **整帧级处理**（对齐后的复合帧），
-    不丢弃整帧，只把异常节点的数据清零，其他正常节点保留。
+    策略：将野值节点的数据替换为 **上一个正常帧** 该节点的数据（前向填充），
+    保证帧数不变、序列连续，不影响其他正常节点。
     """
-    result = []
+    result: List[Dict[str, Any]] = []
+    # 记录每个角色的上一个正常值
+    last_good: Dict[str, Dict[str, float]] = {}
+
     for frame in frames:
         points = frame.get("points", {})
-        cleaned_points = {}
+        cleaned_points: Dict[str, Dict[str, float]] = {}
+
         for role, pt in points.items():
             if not isinstance(pt, dict):
                 continue
@@ -360,14 +364,20 @@ def filter_physical_outliers(
             acc_norm = np.sqrt(ax**2 + ay**2 + az**2)
             gyro_norm = np.sqrt(gx**2 + gy**2 + gz**2)
 
-            if acc_norm > PHYSICAL_ACC_LIMIT_G or gyro_norm > PHYSICAL_GYRO_LIMIT_DPS:
-                # 只清零这个异常节点，不丢整帧
-                _LOGGER.debug("野值节点 %s: acc_norm=%.1f  gyro_norm=%.0f", role, acc_norm, gyro_norm)
-                cleaned_points[role] = {"ax": 0, "ay": 0, "az": 0,
-                                        "gx": 0, "gy": 0, "gz": 0}
+            is_bad = acc_norm > PHYSICAL_ACC_LIMIT_G or gyro_norm > PHYSICAL_GYRO_LIMIT_DPS
+
+            if is_bad and role in last_good:
+                # 用上一帧正常值替换
+                _LOGGER.debug("野值节点 %s: acc_norm=%.1f  gyro_norm=%.0f → 前向填充", role, acc_norm, gyro_norm)
+                cleaned_points[role] = dict(last_good[role])
+            elif is_bad:
+                # 没有历史值就用零
+                cleaned_points[role] = {"ax": 0, "ay": 0, "az": 0, "gx": 0, "gy": 0, "gz": 0}
             else:
                 cleaned_points[role] = pt
+                last_good[role] = pt
 
         if cleaned_points:
             result.append({**frame, "points": cleaned_points})
+
     return result

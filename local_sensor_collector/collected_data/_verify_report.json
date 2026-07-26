@@ -1,0 +1,15 @@
+{
+  "file": "aligned_20260726_102255.jsonl",
+  "total_frames": 329,
+  "roles": {
+    "waist": 329,
+    "left_knee": 329,
+    "right_knee": 329,
+    "left_foot": 329,
+    "right_foot": 329
+  },
+  "duration_ms": 6600,
+  "avg_interval_ms": 20.1,
+  "jitter_ms": 40,
+  "passed_checks": "4/5"
+}

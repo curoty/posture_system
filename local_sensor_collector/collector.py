@@ -363,8 +363,8 @@ def collect_session(
         }
 
     # ── 真实 MQTT 采集 ──
-    # 多采 30 帧缓冲（约 0.6 秒），对齐丢弃边界帧后依然能取足 frame_count
-    collect_target = frame_count + 30
+    # 多采 50 帧缓冲（约 1 秒），对齐丢弃边界帧后依然能取足 frame_count
+    collect_target = frame_count + 50
     print(f"\n  目标: {frame_count} 帧 | 期望节点: {', '.join(roles)}")
 
     client = _ensure_mqtt()
